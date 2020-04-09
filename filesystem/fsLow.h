@@ -13,10 +13,19 @@
 //		return value -2 = insufficient space for the volume		
 //		volSize will be filled with the volume size
 //		blockSize will be filled with the block size
+#ifndef uint64_t
+typedef u_int64_t uint64_t;
+#endif
+#ifndef uint32_t
+typedef u_int32_t uint32_t;
+#endif
+typedef unsigned long long ull_t;
+
+
+
 int startPartitionSystem (char * filename, uint64_t * volSize, uint64_t * blockSize);
 
-// Closes down the volume file and must be called prior to terminating the process, but no read or writes can happen after this call.
-int closePartitionSystem (void);
+int closePartitionSystem ();
 
 uint64_t LBAwrite (void * buffer, uint64_t lbaCount, uint64_t lbaPosition);
 
