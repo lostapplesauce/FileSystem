@@ -4,3 +4,20 @@
 
 #include "fsImplementation.h"
 
+// List directories
+
+// Create directory
+
+// Add file
+
+// Remove file
+
+// Cope file
+
+// Move file
+
+// Set metadata
+
+// Copy from the normal filesystem to your filesystem
+
+// Copy from your filesystem to the normal filesystem

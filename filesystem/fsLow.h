@@ -21,11 +21,9 @@ typedef u_int32_t uint32_t;
 #endif
 typedef unsigned long long ull_t;
 
-
-
 int startPartitionSystem (char * filename, uint64_t * volSize, uint64_t * blockSize);
 
-int closePartitionSystem ();
+int closePartitionSystem (void);
 
 uint64_t LBAwrite (void * buffer, uint64_t lbaCount, uint64_t lbaPosition);
 
@@ -41,6 +39,3 @@ uint64_t LBAread (void * buffer, uint64_t lbaCount, uint64_t lbaPosition);
 
 #define	PART_NOERROR 		0
 #define PART_ERR_INVALID	-4
-
-
-

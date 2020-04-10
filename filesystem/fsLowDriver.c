@@ -12,9 +12,17 @@
 #include "fsLow.h"
 
 
-int main (int argc, char *argv[])
-	{	
-	char * filename;
+
+
+/*
+ 1. Figure out how to write Volume Struct to LBA[0]
+
+ */
+
+
+
+int main (int argc, char *argv[]) {
+    char * filename;
 	uint64_t volumeSize;
 	uint64_t blockSize;
     int retVal;
@@ -34,7 +42,9 @@ int main (int argc, char *argv[])
 	memset (buf, 0, blockSize*2);
 	strcpy (buf, "Now is the time for all good people to come to the aid of their countrymen\n");
 	strcpy (&buf[blockSize+10], "Four score and seven years ago our fathers brought forth onto this continent a new nation\n");
-	LBAwrite (buf, 2, 0);
+        
+    
+	//LBAwrite (buf, 2, 0);
 	LBAwrite (buf, 2, 3);
 	LBAread (buf2, 2, 0);
 	if (memcmp(buf, buf2, blockSize*2)==0)
