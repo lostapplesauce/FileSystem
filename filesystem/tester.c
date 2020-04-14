@@ -32,7 +32,7 @@ int main (int argc, char *argv[]) {
     }
     
     // For DEV. Will be removed later
-    //remove("test.txt");
+    remove(argv[1]);
     
     // Start Partition System
     printf("-------------------------------------------------------\n");
@@ -56,6 +56,7 @@ int main (int argc, char *argv[]) {
         char *vn = PARTITION_NAME;
         initializeVolumeControlBlock(volumeSize, vn, blockSize);
     }
+    
     
     closePartitionSystem();
     exit(0);

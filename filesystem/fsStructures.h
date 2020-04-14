@@ -102,8 +102,11 @@ struct volumeControlBlock {
     
     // Size of an LBA block in bytes
     // Default will be 512 bytes, should not be changed
-    // 16 bits  [0, 65,535]
+    // 64 bits  [0, 18,446,744,073,709,551,615]
     uint64_t blockSize;
+    
+    // Total number of blocks in the partition
+    uint64_t numBlocks;
 };
 
 
@@ -111,14 +114,22 @@ struct volumeControlBlock {
  Description: Keeps track of the free blocks in the LBA
 */
 struct freeSpaceInformation {
-    // Number of bytes a HDD has free to be used
+    // Number of bytes a partition has free to be used
     // As files are added or removed, this number changes to represent those changes
     // 64 bits [0, 18,446,744,073,709,551,615]
     uint64_t freeSpace;
     
-    // Bitmap of all used spaces in the HDD, where each bit represents a single block in the LBA
+    // Lowest LBA block accessible for this partition
+    // [0, 255]
+    uint8_t lowestBlockAccessible;
+    
+    // Highest LBA block accessible for this partition
+    // 32 bits [0, 18,446,744,073,709,551,615]
+    uint64_t highestBlockAccessible;
+    
+    // Bitmap of all used spaces in the partition, where each bit represents a single block in the LBA
     // 0 indicates an used block, 1 indicates a free block
-    unsigned long bitArray[];
+    int freeBlockBitArray[];
 };
 
 

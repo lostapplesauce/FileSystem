@@ -35,10 +35,23 @@
 // Print Menu
 void printMenu(void);
 
-// Initialize control block
+// Initialize control block (block 0)
 int initializeVolumeControlBlock(uint64_t volumeSize, char *volumeName, uint16_t blockSize);
 
-// Check if volume control block has been initialized before
-// Returns 0 if control block has not been initialized
-// Returns 1 if control block has been initialized
+/*
+ Check if volume control block has been initialized before
+ Returns 0 if control block has not been initialized
+ Returns 1 if control block has been initialized
+*/
 int hasVolumeControlBlock(uint16_t blockSize);
+
+// Initialize free space information blocks (blocks 1-49)
+void intializeFreeSpaceInformation(uint64_t volumeSize, int16_t blockSize);
+
+/*
+The following methods are used for setting/getting bits in the bit array
+Source: http://www.mathcs.emory.edu/~cheung/Courses/255/Syllabus/1-C-intro/bit-array.html
+*/
+void setBit(int *A[], uint64_t bit);
+void clearBit(int *A[], uint64_t bit);
+int getBit(int *A[], uint64_t bit);
