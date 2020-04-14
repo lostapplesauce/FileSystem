@@ -11,17 +11,7 @@
 #include <math.h>
 #include "fsLow.h"
 
-
-
-
-/*
- 1. Figure out how to write Volume Struct to LBA[0]
-
- */
-
-
-
-int main (int argc, char *argv[]) {
+int main4 (int argc, char *argv[]) {
     char * filename;
 	uint64_t volumeSize;
 	uint64_t blockSize;
@@ -39,13 +29,13 @@ int main (int argc, char *argv[]) {
 	
 	char * buf = malloc(blockSize *2);
 	char * buf2 = malloc(blockSize *2);
-	memset (buf, 0, blockSize*2);
+	memset (buf, 'P', blockSize*2);
 	strcpy (buf, "Now is the time for all good people to come to the aid of their countrymen\n");
 	strcpy (&buf[blockSize+10], "Four score and seven years ago our fathers brought forth onto this continent a new nation\n");
         
     
-	//LBAwrite (buf, 2, 0);
-	LBAwrite (buf, 2, 3);
+	LBAwrite (buf, 2, 0);
+	LBAwrite (buf, 2, 2);
 	LBAread (buf2, 2, 0);
 	if (memcmp(buf, buf2, blockSize*2)==0)
 		{
@@ -54,7 +44,7 @@ int main (int argc, char *argv[]) {
 	else
 		printf("FAILURE on Write/Read\n");
 		
-	free (buf);
+	free(buf);
 	free(buf2);
 	closePartitionSystem();
 	return 0;	

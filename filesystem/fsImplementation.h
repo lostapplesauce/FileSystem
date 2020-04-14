@@ -32,9 +32,13 @@
 
 // Copy from your filesystem to the normal filesystem
 
+// Print Menu
+void printMenu(void);
 
-/*
- HEADER PROTOTYPES FOR PRIVATE HELPER FUNCTIONS
- ALL HELPER FUNCTIONS PROTYPES WILL GO HERE
- ALL HELPER FUNCTIONS IMPLEMENTATIONS WILL GO IN .c FILE
-*/
+// Initialize control block
+int initializeVolumeControlBlock(uint64_t volumeSize, char *volumeName, uint16_t blockSize);
+
+// Check if volume control block has been initialized before
+// Returns 0 if control block has not been initialized
+// Returns 1 if control block has been initialized
+int hasVolumeControlBlock(uint16_t blockSize);
