@@ -125,12 +125,7 @@ void intializeFreeSpaceInformation(uint64_t volumeSize, int16_t blockSize) {
     int *bitArray[fsi->highestBlockAccessible];
     
     // Set all bits to 1, since at the beggining, they are all free
-    memset(bitArray, 1, sizeof(int));
-    
-    // Set the first 50 blocks to used, since they are used by the vcb/fsi blocks
-    for (int i = 0; i < 50; i++) {
-        clearBit(bitArray, i);
-    }
+    //memset(bitArray, 0, sizeof(int));
     
     // Copy temp bit array to struct bit array
     memcpy(fsi->freeBlockBitArray, bitArray, sizeof(bitArray));
@@ -172,7 +167,7 @@ void clearBit(int *A[], uint64_t bit) {
     *A[i] = *A[i] & flag;     // RESET the bit at the k-th position in A[i]
 }
 
-int getBit(int *A[], uint64_t bit) {
+int getBit(int A[], uint64_t bit) {
     uint64_t i = bit / 32;
     uint64_t pos = bit % 32;
 
@@ -180,7 +175,7 @@ int getBit(int *A[], uint64_t bit) {
 
     flag = flag << pos;     // flag = 0000...010...000   (shifted k positions)
 
-    if ( *A[i] & flag )      // Test the bit at the k-th position in A[i]
+    if ( A[i] & flag )      // Test the bit at the k-th position in A[i]
         return 1;
     else
         return 0;

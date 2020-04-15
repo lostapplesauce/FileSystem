@@ -54,4 +54,4 @@ Source: http://www.mathcs.emory.edu/~cheung/Courses/255/Syllabus/1-C-intro/bit-a
 */
 void setBit(int *A[], uint64_t bit);
 void clearBit(int *A[], uint64_t bit);
-int getBit(int *A[], uint64_t bit);
+int getBit(int A[], uint64_t bit);

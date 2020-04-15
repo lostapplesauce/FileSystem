@@ -57,6 +57,16 @@ int main (int argc, char *argv[]) {
         initializeVolumeControlBlock(volumeSize, vn, blockSize);
     }
     
+    struct freeSpaceInformation *fsi = malloc(blockSize * 49);
+    LBAread(fsi, 49, 1);
+    printf("Free Space: %llu\n", fsi->freeSpace);
+    printf("Lowest Block Accessible: %hhu\n", fsi->lowestBlockAccessible);
+    printf("Highest Block Accessible: %llu\n", fsi->highestBlockAccessible);
+    for (int i = 0; i < 100; i++) {
+        printf("Block %d: %d\n", i, getBit((fsi->freeBlockBitArray), i));
+    }
+    
+    
     
     closePartitionSystem();
     exit(0);
