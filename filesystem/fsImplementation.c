@@ -2,31 +2,17 @@
 // This is the file where we will implement all the functionalities professor asked
 // From instructions: The driver should be interactive (with all built in commands) to list directories, create directories, add and remove files, copy files, move files, setting meta data, and two “special commands” one to copy from the normal filesystem to your filesystem and the other from your filesystem to the normal filesystem
 
+// Required C libraries
 #include <stdlib.h>
 #include <string.h>
-#include<time.h>
+#include <time.h>
 
-#include "fsImplementation.h"
+// Bierman Files
 #include "fsLow.h"
+
+// Group Files
 #include "fsStructures.h"
-
-// List directories
-
-// Create directory
-
-// Add file
-
-// Remove file
-
-// Cope file
-
-// Move file
-
-// Set metadata
-
-// Copy from the normal filesystem to your filesystem
-
-// Copy from your filesystem to the normal filesystem
+#include "fsImplementation.h"
 
 void printMenu(){
     printf("-------------------------------------------------------\n");
@@ -54,11 +40,12 @@ int initializeVolumeControlBlock(uint64_t volumeSize, char *volumeName, uint16_t
     vcb->blockSize = blockSize;
     vcb-> numBlocks = (volumeSize / blockSize);
 
-    // Generate random volumeID
-    srand((unsigned int)time(NULL));
+    // Generate and set a random volumeID
+    srand((unsigned int)time(0));
     uint32_t ID = rand();
     vcb->volumeID = ID;
     
+    // Print information about the newly created VCB
     printf("-------------------------------------------------------\n");
     printf("CREATING VOLUME CONTROL BLOCK...\n");
     printf("Volume Name: %s\n", vcb->volumeName);
@@ -69,7 +56,7 @@ int initializeVolumeControlBlock(uint64_t volumeSize, char *volumeName, uint16_t
     printf("VOLUME CONTROL BLOCK CREATED SUCCESSFULLY!\n");
     printf("-------------------------------------------------------\n\n");
     
-    // Write volumeControlBlock to LBA element 0
+    // Write VCB to LBA block 0
     LBAwrite(vcb, 1, 0);
     
     // Since this is the first time this partition is being created, we must also intialize the free space information blocks
@@ -83,53 +70,74 @@ int initializeVolumeControlBlock(uint64_t volumeSize, char *volumeName, uint16_t
 }
 
 int hasVolumeControlBlock(uint16_t blockSize) {
-    // Create a temp volumeControlBlock to gather back information from block
+    // Create a temp volumeControlBlock to gather back information from block 0
     struct volumeControlBlock *vcb = malloc(blockSize);
 
     // Read from LBA block 0
     LBAread(vcb, 1, 0);
     
-    // If the volume control block has an ID of 0, it means that it was not intialized
+    // If the VCB variables have a default of 0, the VCB has not been created yet
     if (vcb->volumeID == 0 && vcb->volumeSize == 0 && vcb->blockSize == 0) {
+        //Cleanup
+        free (vcb);
+        
+        //Since the VCB does not exist, print 0
         return 0;
+    } else {
+        // Since the VCB does exist, print information about it
+        printf("-------------------------------------------------------\n");
+        printf("VOLUME CONTROL BLOCK ALREADY CREATED.\n");
+        printf("Volume Name: %s\n", vcb->volumeName);
+        printf("Volume ID: %u\n", vcb->volumeID);
+        printf("Volume Size: %llu\n", vcb->volumeSize);
+        printf("Volume LBA Block Size: %llu\n", vcb->blockSize);
+        printf("Number of LBA Blocks: %llu\n", vcb->numBlocks);
+        printf("-------------------------------------------------------\n\n");
+        
+        // **** Also print information about the VCB, since it exists ****
+        struct freeSpaceInformation *fsi = getFreeSpaceInformation(blockSize);
+        printf("-------------------------------------------------------\n");
+        printf("FREE SPACE INFORMATION BLOCKS ALREADY CREATED.\n");
+        printf("Free Space: %llu\n", fsi->freeSpace);
+        printf("Lowest Block Accessible: %hhu\n", fsi->lowestBlockAccessible);
+        printf("Highest Block Accessible: %llu\n", fsi->highestBlockAccessible);
+        printf("-------------------------------------------------------\n\n");
+        
+        //Cleanup
+        free(vcb);
+        free(fsi);
+        
+        // Since the VCB exists, print 1
+        return 1;
     }
-    printf("-------------------------------------------------------\n");
-    printf("VOLUME CONTROL BLOCK ALREADY CREATED IN THIS PARTITION.\n");
-    printf("Volume Name: %s\n", vcb->volumeName);
-    printf("Volume ID: %u\n", vcb->volumeID);
-    printf("Volume Size: %llu\n", vcb->volumeSize);
-    printf("Volume LBA Block Size: %llu\n", vcb->blockSize);
-    printf("Number of LBA Blocks: %llu\n", vcb->numBlocks);
-    printf("-------------------------------------------------------\n\n");
-    return 1;
 }
 
 void intializeFreeSpaceInformation(uint64_t volumeSize, int16_t blockSize) {
-    // By default, some bytes are used for the following:
-    // Block 0: VolumeControl Block
-    // Block 1-49: FreeSpaceInformation Blocks
-    uint32_t numUsedBytes = ((1 * blockSize) + (49 * blockSize));
+    // LBA Block 0: Volume Control Block
+    // LBA Block 1-49: Free Space Information Blocks
+    // Total Blocks used by system: 50
+    uint32_t numUsedBytes = (50 * blockSize);
     
-    // Actual volume usuable, after control block and free space blocks are taken into account
+    // Actual volume usuable, after VCB and FSI blocks are taken into account
     uint64_t actualVolumeSize = volumeSize - numUsedBytes;
     
     // Create struct in order to later write it to the file system
     struct freeSpaceInformation *fsi = malloc(blockSize * 49);
     
-    // Set parameters
-    fsi->freeSpace = actualVolumeSize;
-    fsi-> lowestBlockAccessible = 50;
-    fsi->highestBlockAccessible = ((actualVolumeSize / 512) - 50);
-    
-    // Create temp bit array representing all blocks
-    int *bitArray[fsi->highestBlockAccessible];
-    
     // Set all bits to 1, since at the beggining, they are all free
-    //memset(bitArray, 0, sizeof(int));
+    memset(fsi, 0xFF, (blockSize * 49));
     
-    // Copy temp bit array to struct bit array
-    memcpy(fsi->freeBlockBitArray, bitArray, sizeof(bitArray));
+    // Set other parameters
+    fsi->freeSpace = actualVolumeSize;
+    fsi->lowestBlockAccessible = 50;
+    fsi->highestBlockAccessible = ((volumeSize/blockSize) - 1);
     
+    // Clear bits for blocks 0-49, since they are used by VCB and FSI blocks
+    for (int i = 0; i < 50; i++) {
+        clearBit(fsi->freeBlockBitArray, i);
+    }
+    
+    // Print information about the newly created FSI blocks
     printf("-------------------------------------------------------\n");
     printf("CREATING FREE SPACE INFORMATION BLOCKS...\n");
     printf("Free Space: %llu\n", fsi->freeSpace);
@@ -144,39 +152,45 @@ void intializeFreeSpaceInformation(uint64_t volumeSize, int16_t blockSize) {
     free(fsi);
 }
 
-void setBit(int *A[], uint64_t bit) {
-    uint64_t i = bit / 32;           // i = array index (use: A[i])
-    uint64_t pos = bit % 32;          // pos = bit position in A[i]
+void setBit(int A[], uint64_t bit) {
+    uint64_t i = bit / 32;          // i = array index (use: A[i])
+    uint64_t pos = bit % 32;        // pos = bit position in A[i]
 
-    unsigned int flag = 1;   // flag = 0000.....00001
+    unsigned int flag = 1;          // flag = 0000.....00001
 
-    flag = flag << pos;      // flag = 0000...010...000   (shifted k positions)
+    flag = flag << pos;             // flag = 0000...010...000   (shifted k positions)
 
-    *A[i] = *A[i] | flag;      // Set the bit at the k-th position in A[i]
+    A[i] = A[i] | flag;             // Set the bit at the k-th position in A[i]
 }
 
-void clearBit(int *A[], uint64_t bit) {
+void clearBit(int A[], uint64_t bit) {
     uint64_t i = bit / 32;
     uint64_t pos = bit % 32;
 
-    unsigned int flag = 1;  // flag = 0000.....00001
+    unsigned int flag = 1;          // flag = 0000.....00001
 
-    flag = flag << pos;     // flag = 0000...010...000   (shifted k positions)
-    flag = ~flag;           // flag = 1111...101..111
+    flag = flag << pos;             // flag = 0000...010...000   (shifted k positions)
+    flag = ~flag;                   // flag = 1111...101..111
 
-    *A[i] = *A[i] & flag;     // RESET the bit at the k-th position in A[i]
+    A[i] = A[i] & flag;             // RESET the bit at the k-th position in A[i]
 }
 
 int getBit(int A[], uint64_t bit) {
     uint64_t i = bit / 32;
     uint64_t pos = bit % 32;
 
-    unsigned int flag = 1;  // flag = 0000.....00001
+    unsigned int flag = 1;          // flag = 0000.....00001
 
-    flag = flag << pos;     // flag = 0000...010...000   (shifted k positions)
+    flag = flag << pos;             // flag = 0000...010...000   (shifted k positions)
 
-    if ( A[i] & flag )      // Test the bit at the k-th position in A[i]
+    if ( A[i] & flag )              // Test the bit at the k-th position in A[i]
         return 1;
     else
         return 0;
+}
+
+void* getFreeSpaceInformation(int16_t blockSize) {
+    struct freeSpaceInformation *fsi = malloc(49 * blockSize);
+    LBAread(fsi, 49, 1);
+    return fsi;
 }

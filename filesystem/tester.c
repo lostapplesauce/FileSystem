@@ -1,3 +1,4 @@
+// Required C libraries
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -11,7 +12,10 @@
 #include <math.h>
 #include<ctype.h>
 
+// Bierman Files
 #include "fsLow.h"
+
+// Group Files
 #include "fsStructures.h"
 #include "fsImplementation.h"
 
@@ -31,7 +35,7 @@ int main (int argc, char *argv[]) {
         exit(1);
     }
     
-    // For DEV. Will be removed later
+    // For DEVELOPMENT. Will be removed later ~~
     remove(argv[1]);
     
     // Start Partition System
@@ -42,7 +46,7 @@ int main (int argc, char *argv[]) {
     uint64_t blockSize = atoll (argv[3]);
     int startPartitionReturn = startPartitionSystem (filename, &volumeSize, &blockSize);
 
-    // Make sure partition was successfull
+    // Make sure partition was successfully create/opened
     if (startPartitionReturn == 0) {
         printf("FILE SYSTEM OPENED SUCSESSFULLY!\n");
     } else {
@@ -51,29 +55,16 @@ int main (int argc, char *argv[]) {
     }
     printf("-------------------------------------------------------\n\n");
     
-    // Check if a volumeControlBlock has already been created
+    // If a Volume Control Block has not been created before, create it now
     if (!hasVolumeControlBlock(blockSize)) {
-        char *vn = PARTITION_NAME;
-        initializeVolumeControlBlock(volumeSize, vn, blockSize);
+        // This will create the Volume Control Block AND it will also initialize the Free Space Information blocks
+        initializeVolumeControlBlock(volumeSize, PARTITION_NAME, blockSize);
     }
     
-    struct freeSpaceInformation *fsi = malloc(blockSize * 49);
-    LBAread(fsi, 49, 1);
-    printf("Free Space: %llu\n", fsi->freeSpace);
-    printf("Lowest Block Accessible: %hhu\n", fsi->lowestBlockAccessible);
-    printf("Highest Block Accessible: %llu\n", fsi->highestBlockAccessible);
-    for (int i = 0; i < 100; i++) {
-        printf("Block %d: %d\n", i, getBit((fsi->freeBlockBitArray), i));
-    }
-    
-    
-    
-    closePartitionSystem();
-    exit(0);
     
     
     // Main loop of program, where we ask for user input then carry out that functionality
-    while (1) {
+    while (0) {
         // Prompt user for functionality choice
         char userInput;
         printMenu();
@@ -85,7 +76,9 @@ int main (int argc, char *argv[]) {
         }
         
         if (userInput == '0') {
+            // Close partition and exit the program
             printf("Exiting File System...\n");
+            closePartitionSystem();
             exit(0);
         }
     }

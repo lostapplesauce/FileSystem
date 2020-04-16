@@ -1,16 +1,12 @@
-//  File System C File
-//  Team: Last Minute
-//  Date: 3/19/2020
+/*
+ Team: Last Minute
+ Date Created: 3/19/2020
+ */
 
 #ifndef fsStructures_h
 #define fsStructures_h
-
 #include <stdio.h>
-
 #endif /* fsStructures_h */
-
-// Randomly generated number for checking block integrety
-// #define SIGNATURE_VALUE 17775044626474462825
 
 // Permissions masking values
 #define OTHER_EXECUTE 0x0001
@@ -24,7 +20,7 @@
 #define USER_READ 0x0018
 
 // Sizes for data types
-#define FILE_NAME_LENGTH 30
+#define FILE_NAME_LENGTH 32
 #define FILE_EXTENSION_LENGTH 10
 #define VOLUME_NAME_LENGHT 30
 
@@ -49,8 +45,8 @@
 */
 
 /*
- Total bytes per directory entry: 496 bits - 62 bytes
- N directory entries per LBA: Where N = 512/70 = 8.25
+ Total bytes per directory entry: 576 bits - 72 bytes
+ N directory entries per LBA: Where N = 512/64 = 8
  */
 struct directoryEntry {
     // Block number in the LBA where file index is stored. This file index contains a list of all the blocks that create that file
@@ -58,10 +54,10 @@ struct directoryEntry {
     uint64_t fileIndexLocation;
     
     // Char array representing the name of the file
-    // 240 bits
+    // 256 bits
     char name[FILE_NAME_LENGTH];
     
-    // Char array represeting the file type (ie: .pdf, .txt, .xcodeproj, etc)
+    // Char array represeting the file type (ie: pdf, txt, xcodeproj, ...etc)
     // 80 bits
     char fileExtension[FILE_EXTENSION_LENGTH];
     
@@ -73,8 +69,6 @@ struct directoryEntry {
     // Number of second since January 1st, 1970: Unix time (also known as Epoch time)
     // 32 bits [0, 4,294,967,295]
     uint32_t dateCreated;
-    uint32_t dateModified;
-    uint32_t dateAccessed;
     
     // Number of bytes a file uses
     // 64 bits [0, 18,446,744,073,709,551,615]
@@ -111,7 +105,7 @@ struct volumeControlBlock {
 
 
 /*
- Description: Keeps track of the free blocks in the LBA
+ Description: Keeps track of the free blocks of the LBA
 */
 struct freeSpaceInformation {
     // Number of bytes a partition has free to be used
