@@ -38,6 +38,7 @@ void initializeVolumeControlBlock(uint64_t volumeSize, char *volumeName, uint16_
     // Set correct parameters
     vcb->volumeSize = volumeSize;
     vcb->rootDirectory = 50;
+    vcb->numberOfDirectories = 0;
     strcpy(vcb->volumeName, volumeName);
     vcb->blockSize = blockSize;
     vcb-> numberOfBlocks = (volumeSize / blockSize);
@@ -53,6 +54,7 @@ void initializeVolumeControlBlock(uint64_t volumeSize, char *volumeName, uint16_
     printf("Volume Name: %s\n", vcb->volumeName);
     printf("Volume ID: %u\n", vcb->volumeID);
     printf("Volume Size: %llu\n", vcb->volumeSize);
+    printf("Number of Directories: %llu\n", vcb->numberOfDirectories);
     printf("Volume LBA Block Size: %llu\n", vcb->blockSize);
     printf("Number of LBA Blocks: %llu\n", vcb->numberOfBlocks);
     printf("Root Directory Block: %llu\n", vcb->rootDirectory);
@@ -93,6 +95,7 @@ int hasVolumeControlBlock(uint16_t blockSize) {
         printf("Volume Name: %s\n", vcb->volumeName);
         printf("Volume ID: %u\n", vcb->volumeID);
         printf("Volume Size: %llu\n", vcb->volumeSize);
+        printf("Number of Directories: %llu\n", vcb->numberOfDirectories);
         printf("Volume LBA Block Size: %llu\n", vcb->blockSize);
         printf("Number of LBA Blocks: %llu\n", vcb->numberOfBlocks);
         printf("Root Directory Block: %llu\n", vcb->rootDirectory);
@@ -158,53 +161,121 @@ void intializeFreeSpaceInformation(uint64_t volumeSize, int16_t blockSize) {
     free(fsi);
 }
 
-void listDirectoriesTemp(uint16_t blockSize) {
-    // Get all directories from the LBA
+void* getBlockNumbersOfAllDirectories(uint16_t blockSize) {
+    // Get all directories entries from the LBA
     struct directoryEntry *dirs = malloc(blockSize * 49);
     LBAread(dirs, 49, 50);
     
-    printf("-------------------------------------------------------\n");
-    printf("LISTING DIRECTORIES...\n");
+    // Number of directories on the file system
+    uint64_t numberOfDirectories = getVCBDirectoryCount(blockSize);
+    
+    // Create an array to store the block numbers. We know the size by looking at the total number of directories on the file system
+    uint64_t *blockArray = malloc(sizeof(uint64_t) * numberOfDirectories);
+    
+    // Keeps track of the number of directories we have found. This is useful to know which element in the above array we should add the block to once we have found it
+    int directoriesFound = 0;
+
     // Iterate through all the directories
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i <= numberOfDirectories; i++) {
         // A directory has a file extension string set to the global const DIRECTORY_EXTENSION_NAME
-        // If there are no more directories to be printed, break out of loop
+        // If the current element we are checking is not a directory, skip it
         if (strcmp(dirs[i].fileExtension, DIRECTORY_EXTENSION_NAME) != 0) {
-            // Cleanup
-            free(dirs);
+            continue;
+        }
+        
+        // If the current element we are checking IS A valid directory, add it to the directory list
+        else {
+            blockArray[directoriesFound] = dirs[i].blockLocation;
+            directoriesFound = directoriesFound + 1;
+        }
+        
+        // If we have found all the directories, do not keep searching. Instead, jump out of loop to return the array
+        if (directoriesFound == numberOfDirectories) {
             break;
-        } else {
-            printf("Directory Name: %s\n", dirs[i].name);
-            printf("Directory Location: %llu\n", dirs[i].blockLocation);
-            printf("Directory Permissions: %hu\n", dirs[i].permissions);
-            printf("Directory Creation Date: %u\n", dirs[i].dateCreated);
-            printf("Child Directory Locations: ");
-            // Print all sub directories of this directory
-            for (int j = 0; j < (sizeof(dirs[i].fileIndexLocations) / sizeof(dirs[i].fileIndexLocations[0])); j++) {
-                // When we reach the end of the childrenm break out of print loop
-                if (dirs[i].fileIndexLocations[0] == 0) {
-                    printf("* No Children Directories *");
-                    break;
-                }
-                else if (dirs[i].fileIndexLocations[j] == 0) {
-                    break;
-                }
-                printf("%llu ", dirs[i].fileIndexLocations[j]);
-            }
-            printf("\n\n");
         }
     }
-    printf("-------------------------------------------------------\n\n");
+    
+    //Clean up
+    free(dirs);
+    
+    // After we go find all the directory block locations, return the pointer to the array of blocks
+    // ** THE CALLER OF THIS FUNCTION MUST FREE() THE POINTER AT SOME POINT **
+    return blockArray;
+}
+
+void* getAllDirectoriesStructs(uint16_t blockSize) {
+    // Get all directories entries from the LBA
+    struct directoryEntry *dirs = malloc(blockSize * 49);
+    LBAread(dirs, 49, 50);
+    
+    // Number of directories on the file system
+    uint64_t numberOfDirectories = getVCBDirectoryCount(blockSize);
+    
+    // Create an array to store the directoryEntry structs. We know the size by looking at the total number of directories on the file system
+    struct directoryEntry *dirList= malloc(sizeof(struct directoryEntry) * numberOfDirectories);
+    
+    // Keeps track of the number of directories we have found. This is useful to know which element in the above array we should add the struct to once we have found it
+    int directoriesFound = 0;
+    
+    // Iterate through all the directories
+    for (int i = 0; i <= numberOfDirectories; i++) {
+        // A directory has a file extension string set to the global const DIRECTORY_EXTENSION_NAME
+        // If the current element we are checking is not a directory, skip it
+        if (strcmp(dirs[i].fileExtension, DIRECTORY_EXTENSION_NAME) != 0) {
+            continue;
+        }
+        
+        // If the current element we are checking IS A valid directory, add it to the directory list
+        else {
+            //dirList[directoriesFound] = dirs[i];
+            memcpy(&dirList[directoriesFound], &dirs[i], sizeof(struct directoryEntry));
+            directoriesFound = directoriesFound + 1;
+        }
+        
+        // If we have found all the directories, do not keep searching. Instead, jump out of loop to return the array
+        if (directoriesFound == numberOfDirectories) {
+            break;
+        }
+    }
+    
+    // Cleanup
+    free (dirs);
+    
+    // After we go find all the directory entries, return the pointer to the array of structs
+    // ** THE CALLER OF THIS FUNCTION MUST FREE() THE POINTER AT SOME POINT **
+    return dirList;
+}
+
+void* getDirectoryEntryFromBlock(uint64_t directoryBlockNumber, uint16_t blockSize) {
+    // Since we know the location of the directory, we just need to read a single block
+    struct directoryEntry *dirs = malloc(blockSize);
+    LBAread(dirs, 1, directoryBlockNumber);
+    
+    // Ensure that this is an actual valid directory
+    // A valid directory has a file extension string set to the global const DIRECTORY_EXTENSION_NAME
+    if (strcmp(dirs->fileExtension, DIRECTORY_EXTENSION_NAME) == 0) {
+        // Return the pointer to the struct
+        // * THE CALLER IS RESPONSIBLE FOR CALLING FREE() ON THIS STRUCT *
+        return dirs;
+    }
+    
+    // If it is not valid, throw an erroe
+    else {
+        // Cleanup
+        free (dirs);
+        printf("ERROR AT getDirectoryEntryFromBlock(): TRIED TO ACCESS AN INVALID DIRECTORY BLOCK!\n");
+        return NULL;
+    }
 }
 
 void listDirectories (uint64_t parentDirectoryBlockNumber, uint16_t blockSize) {
     printf("-------------------------------------------------------\n");
     printf("LISTING DIRECTORIES...\n");
-    listDirectoriesHelper(parentDirectoryBlockNumber, 0, blockSize);
+    listDirectoriesRecursiveHelper(parentDirectoryBlockNumber, 0, blockSize);
     printf("-------------------------------------------------------\n\n");
 }
 
-void listDirectoriesHelper (uint64_t parentDirectoryBlockNumber, int directoryLevel, uint16_t blockSize) {
+void listDirectoriesRecursiveHelper (uint64_t parentDirectoryBlockNumber, int directoryLevel, uint16_t blockSize) {
     // Since we know the location of the directory, we just need to read a single block
     struct directoryEntry *dirs = malloc(blockSize);
     LBAread(dirs, 1, parentDirectoryBlockNumber);
@@ -225,14 +296,14 @@ void listDirectoriesHelper (uint64_t parentDirectoryBlockNumber, int directoryLe
         // Go to every child and print its children
         for (int i = 0; dirs->fileIndexLocations[i]  != 0; i++) {
             int childreLevel = (directoryLevel + 1);
-            listDirectoriesHelper(dirs->fileIndexLocations[i], childreLevel, blockSize);
+            listDirectoriesRecursiveHelper(dirs->fileIndexLocations[i], childreLevel, blockSize);
         }
     }
     
     free(dirs);
 }
 
-void createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, uint16_t permissions, uint16_t blockSize) {
+uint64_t createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, uint16_t permissions, uint16_t blockSize) {
     // Create temp directory, which will be written to file system
     struct directoryEntry *tempDir = malloc(blockSize);
     
@@ -272,8 +343,13 @@ void createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, u
     // Update parent node's 'fileIndexLocation' to point to this directory
     addChildDirectoryIndexLocationToParent(parentDirectoryBlockNumber, freeBlock, blockSize);
     
+    // Since we created a directory, we must update the directory count
+    increaseVCBDirectoryCount(blockSize);
+    
     // Cleanup
     free(tempDir);
+    
+    return freeBlock;
 }
 
 void createRootDirectory(uint16_t permissions, uint16_t blockSize) {
@@ -305,8 +381,80 @@ void createRootDirectory(uint16_t permissions, uint16_t blockSize) {
     // Write back the block
     LBAwrite(tempRootDir, 1, 50);
     
+    // Since we created a directory, we must update the directory count
+    increaseVCBDirectoryCount(blockSize);
+    
     //Cleanup
     free(tempRootDir);
+}
+
+void increaseVCBDirectoryCount(uint16_t blockSize) {
+    // Create a temp volumeControlBlock to gather back information from block 0
+    struct volumeControlBlock *vcb = malloc(blockSize);
+
+    // Read from LBA block 0
+    LBAread(vcb, 1, 0);
+    
+    // Update the number of directories counter
+    vcb->numberOfDirectories = (vcb->numberOfDirectories + 1);
+    
+    // Write VCB back to file system
+    LBAwrite(vcb, 1, 0);
+    
+    //Clean up
+    free(vcb);
+}
+
+void decreaseVCBDirectoryCount(uint16_t blockSize) {
+    // Create a temp volumeControlBlock to gather back information from block 0
+    struct volumeControlBlock *vcb = malloc(blockSize);
+
+    // Read from LBA block 0
+    LBAread(vcb, 1, 0);
+    
+    // Update the number of directories counter
+    // Ensure that we are not going into a negative number
+    if ( (vcb->numberOfDirectories - 1) >= 0) {
+        vcb->numberOfDirectories = (vcb->numberOfDirectories - 1);
+    } else {
+        printf("ERROR IN decreaseVCBDirectoryCount(). Attempting to reduce directory count below 0!\n");
+    }
+    
+    // Write VCB back to file system
+    LBAwrite(vcb, 1, 0);
+    
+    //Clean up
+    free(vcb);
+}
+
+uint64_t getVCBDirectoryCount(uint16_t blockSize) {
+    // Create a temp volumeControlBlock to gather back information from block 0
+    struct volumeControlBlock *vcb = malloc(blockSize);
+
+    // Read from LBA block 0
+    LBAread(vcb, 1, 0);
+    
+    uint64_t numberOfDirectories = vcb->numberOfDirectories;
+    
+    //Clean up
+    free(vcb);
+    
+    return numberOfDirectories;
+}
+
+uint64_t getVCBRootDirectory(uint16_t blockSize) {
+    // Create a temp volumeControlBlock to gather back information from block 0
+    struct volumeControlBlock *vcb = malloc(blockSize);
+
+    // Read from LBA block 0
+    LBAread(vcb, 1, 0);
+    
+    uint64_t rootDirectory = vcb->rootDirectory;
+    
+    //Clean up
+    free(vcb);
+    
+    return rootDirectory;
 }
 
 void setBit(int A[], uint64_t bit) {
@@ -462,4 +610,15 @@ int addChildDirectoryIndexLocationToParent(uint64_t parentDirectoryBlockNumber, 
     
     // Return failure
     return 0;
+}
+
+void sampleCreateDirectories(int16_t blockSize) {
+    // Create DUMMY DATA for testing (adding, printing, removing, etc...)
+    uint64_t rootDirectory = getVCBRootDirectory(blockSize);
+    createDirectory("Pictures", rootDirectory, 666, blockSize);
+    uint64_t documentEntryLocation = createDirectory("Documents", rootDirectory, 555, blockSize);
+    createDirectory("Identifications", documentEntryLocation, 123, blockSize);
+    createDirectory("Legal Paperwork", documentEntryLocation, 777, blockSize);
+    uint64_t videosLocation = createDirectory("Videos", rootDirectory, 456, blockSize);
+    createDirectory("Animations", videosLocation, 123, blockSize);
 }

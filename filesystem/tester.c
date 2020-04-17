@@ -59,17 +59,7 @@ int main (int argc, char *argv[]) {
     if (!hasVolumeControlBlock(blockSize)) {
         // This will create the Volume Control Block AND it will also initialize the Free Space Information blocks
         initializeVolumeControlBlock(volumeSize, PARTITION_NAME, blockSize);
-        createDirectory("Pictures", 50, 666, blockSize);
-        createDirectory("Documents", 50, 555, blockSize);
-        createDirectory("Identifications", 52, 123, blockSize);
-        createDirectory("Legal Paperwork", 52, 777, blockSize);
-        createDirectory("Videos", 50, 456, blockSize);
-        createDirectory("Animations", 55, 123, blockSize);
-        
     }
-    
-    listDirectories(50, blockSize);
-    exit(0);
     
     // Main loop of program, where we ask for user input then carry out that functionality
     printMenu();
@@ -81,8 +71,11 @@ int main (int argc, char *argv[]) {
         switch (userInput) {
             // List directories
             case '1':
-                listDirectoriesTemp(blockSize);
+                listDirectories(getVCBRootDirectory(blockSize), blockSize);
                 break;
+                
+            case '2':
+                sampleCreateDirectories(blockSize);
                 
             case 'M':
             case 'm':
