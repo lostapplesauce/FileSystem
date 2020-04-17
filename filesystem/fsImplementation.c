@@ -139,11 +139,42 @@ void intializeFreeSpaceInformation(uint64_t volumeSize, int16_t blockSize) {
 }
 
 void listDirectories(uint16_t blockSize) {
-    // TODO: IMPLEMENT
+    // Get all directories from the LBA
+    struct directoryEntry *dirs = malloc(blockSize * 49);
+    LBAread(dirs, 49, 50);
+    
+    // Iterate through all the directories
+    for (int i = 0; i < 50; i++) {
+        // A directory has a file extension string set to the global const DIRECTORY_EXTENSION_NAME
+        // If there are no more directories to be printed, break out of loop
+        if (strcmp(dirs[i].fileExtension, DIRECTORY_EXTENSION_NAME) !=0) {
+            // Cleanup
+            free(dirs);
+            break;
+        } else {
+            printf("Directory Name: %s\n", dirs[i].name);
+            printf("Directory Permissions: %hu\n", dirs[i].permissions);
+            printf("Directory Creation Date: %u\n", dirs[i].dateCreated);
+            printf("Directory File Index Location: %llu\n", dirs[i].fileIndexLocation[4]);
+        }
+    }
 }
 
 void createDirectory(char* directoryName, uint16_t permissions, uint16_t blockSize) {
     // TODO: IMPLEMENT
+    // Create a temp directory, which will be written to the file sytem
+    
+    // Set variables for the temp root
+    
+    // Since the root has no files/children directories when created, set these pointers to 0
+    
+    // Find open block to write this directory to
+    
+    // Write to open block
+    
+    // Update parent node's 'fileIndexLocation' to point to this directory
+    
+    // Cleanup
 }
 
 void createRootDirectory(uint16_t permissions, uint16_t blockSize) {
@@ -158,7 +189,7 @@ void createRootDirectory(uint16_t permissions, uint16_t blockSize) {
     tempRootDir->dateCreated = (unsigned int)time(NULL);
     tempRootDir->fileSize = 0;
     
-    // Since the root has no files/children directories at launch, set these pointers to 0
+    // Since the root has no files/children directories when created, set these pointers to 0
     memset(tempRootDir->fileIndexLocation, 0x00, (sizeof(tempRootDir->fileIndexLocation)/sizeof(tempRootDir->fileIndexLocation[0])));
     
     // Write back the block
