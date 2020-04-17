@@ -14,20 +14,21 @@
 #include "fsStructures.h"
 #include "fsImplementation.h"
 
-void printMenu(){
+void printCommands(){
     printf("-------------------------------------------------------\n");
-    printf("Please choose one of the following options:\n");
-    printf("1. List Directories.\n");
-    printf("2. Create Directoty.\n");
-    printf("3. Add File.\n");
-    printf("4. Remove File.\n");
-    printf("5. Copy File.\n");
-    printf("6. Move File.\n");
-    printf("7. Set Metadata.\n");
-    printf("8. Copy from the normal filesystem to this filesystem.\n");
-    printf("9. Copy from this filesystem to the normal filesystem.\n");
-    printf("M. See Menu Again.\n");
-    printf("E. Exit.\n");
+    printf("COMMANDS:\n");
+    printf("List Directories: 'ls'\n");
+    printf("Change Directories: 'cd <directory name>'\n");
+    printf("Create Directoty: 'mkdir <directory name>'\n");
+    printf("Add File: 'mkfile <file name> <file extension>'\n");
+    printf("Remove File: 'rmfile <file name>\n");
+    printf("Copy File: 'cpyfile <original file name> <new file name>'\n");
+    printf("Move File: 'mvfile <file name> <directory location>'\n");
+    printf("Set Metadata: 'setdata <file name> <file permission>'\n");
+    printf("Copy from the normal filesystem to this filesystem: 'TODO!'\n");
+    printf("Copy from this filesystem to the normal filesystem: 'TODO'\n");
+    printf("See Menu Again: 'menu' or 'm'\n");
+    printf("Exit: 'exit' or 'e'\n");
     printf("-------------------------------------------------------\n\n");
 }
 
@@ -303,14 +304,14 @@ void listDirectoriesRecursiveHelper (uint64_t parentDirectoryBlockNumber, int di
     free(dirs);
 }
 
-uint64_t createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, uint16_t permissions, uint16_t blockSize) {
+uint64_t createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, uint16_t blockSize) {
     // Create temp directory, which will be written to file system
     struct directoryEntry *tempDir = malloc(blockSize);
     
     // Set variables for the root directory
     strcpy(tempDir->name, directoryName);
     strcpy(tempDir->fileExtension, DIRECTORY_EXTENSION_NAME);
-    tempDir->permissions = permissions;
+    tempDir->permissions = 755; // Default permission
     tempDir->dateCreated = (unsigned int)time(NULL);
     tempDir->dateModified = (unsigned int)time(NULL);
     tempDir->fileSize = 0;
@@ -615,10 +616,10 @@ int addChildDirectoryIndexLocationToParent(uint64_t parentDirectoryBlockNumber, 
 void sampleCreateDirectories(int16_t blockSize) {
     // Create DUMMY DATA for testing (adding, printing, removing, etc...)
     uint64_t rootDirectory = getVCBRootDirectory(blockSize);
-    createDirectory("Pictures", rootDirectory, 666, blockSize);
-    uint64_t documentEntryLocation = createDirectory("Documents", rootDirectory, 555, blockSize);
-    createDirectory("Identifications", documentEntryLocation, 123, blockSize);
-    createDirectory("Legal Paperwork", documentEntryLocation, 777, blockSize);
-    uint64_t videosLocation = createDirectory("Videos", rootDirectory, 456, blockSize);
-    createDirectory("Animations", videosLocation, 123, blockSize);
+    createDirectory("Pictures", rootDirectory, blockSize);
+    uint64_t documentEntryLocation = createDirectory("Documents", rootDirectory, blockSize);
+    createDirectory("Identifications", documentEntryLocation, blockSize);
+    createDirectory("Legal Paperwork", documentEntryLocation, blockSize);
+    uint64_t videosLocation = createDirectory("Videos", rootDirectory, blockSize);
+    createDirectory("Animations", videosLocation, blockSize);
 }

@@ -62,33 +62,32 @@ int main (int argc, char *argv[]) {
     }
     
     // Main loop of program, where we ask for user input then carry out that functionality
-    printMenu();
+    sampleCreateDirectories(blockSize);
+    printCommands();
     while (1) {
         // Prompt user for functionality choice
-        char userInput;
-        userInput = getchar();
+        char input[128];
+        fgets(input, 128, stdin);
         
-        switch (userInput) {
-            // List directories
-            case '1':
-                listDirectories(getVCBRootDirectory(blockSize), blockSize);
-                break;
-                
-            case '2':
-                sampleCreateDirectories(blockSize);
-                
-            case 'M':
-            case 'm':
-                printMenu();
-                break;
-                
-            // Exit program
-            case 'E':
-            case 'e':
-                printf("Exiting File System...\n");
-                closePartitionSystem();
-                exit(0);
-                break;
+        // Remove trailing new line from input (\n)
+        // Source: https://stackoverflow.com/questions/2693776/removing-trailing-newline-character-from-fgets-input
+        input[strcspn(input, "\n")] = 0;
+        
+        // ls commands
+        if (strcmp(input, "ls") == 0) {
+            listDirectories(getVCBRootDirectory(blockSize), blockSize);
+        }
+        
+        // menu command
+        else if ((strcmp(input, "m") == 0) || (strcmp(input, "M") == 0) || (strcmp(input, "Menu") == 0) || (strcmp(input, "menu") == 0)) {
+            printCommands();
+        }
+        
+        // exit command
+        else if ((strcmp(input, "e") == 0) || (strcmp(input, "E") == 0) || (strcmp(input, "Exit") == 0) || (strcmp(input, "exit") == 0)) {
+            printf("Exiting File System...\n");
+            closePartitionSystem();
+            exit(0);
         }
     }
 }

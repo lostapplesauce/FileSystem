@@ -12,7 +12,7 @@
 #define DIRECTORY_EXTENSION_NAME "DIRECTORY"
 
 // Print Menu
-void printMenu(void);
+void printCommands(void);
 
 // This will get the BLOCK NUMBERS of all directories
 // Returns a pointer to an array of blocks containing directory entries
@@ -42,7 +42,7 @@ int addChildDirectoryIndexLocationToParent(uint64_t parentDirectoryBlockNumber, 
 
 // Create directory
 // Returns the block where the directory struct was placed
-uint64_t createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, uint16_t permissions, uint16_t blockSize);
+uint64_t createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, uint16_t blockSize);
 
 // * DO NOT CALL THIS *
 // Create the root directory, it is auto called when volume control block is created
