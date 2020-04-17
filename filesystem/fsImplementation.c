@@ -98,8 +98,19 @@ int hasVolumeControlBlock(uint16_t blockSize) {
         printf("Root Directory Block: %llu\n", vcb->rootDirectory);
         printf("-------------------------------------------------------\n\n");
         
+        // Since the FSI exists as well, print information about it
+        struct freeSpaceInformation *fsi = getFreeSpaceInformation(blockSize);
+        printf("-------------------------------------------------------\n");
+        printf("FREE SPACE INFORMATION ALREADY CREATED.\n");
+        printf("Free Space Available: %llu\n", fsi->freeSpace);
+        printf("Lowest Block Accessible: %u\n", fsi->lowestBlockAccessible);
+        printf("Highest Block Accessible: %llu\n", fsi->highestBlockAccessible);
+        printf("-------------------------------------------------------\n\n");
+        
+        
         //Cleanup
         free(vcb);
+        free(fsi);
         
         // Since the VCB exists, return 1
         return 1;
@@ -147,7 +158,7 @@ void intializeFreeSpaceInformation(uint64_t volumeSize, int16_t blockSize) {
     free(fsi);
 }
 
-void listDirectories(uint16_t blockSize) {
+void listDirectoriesTemp(uint16_t blockSize) {
     // Get all directories from the LBA
     struct directoryEntry *dirs = malloc(blockSize * 49);
     LBAread(dirs, 49, 50);
@@ -171,8 +182,8 @@ void listDirectories(uint16_t blockSize) {
             // Print all sub directories of this directory
             for (int j = 0; j < (sizeof(dirs[i].fileIndexLocations) / sizeof(dirs[i].fileIndexLocations[0])); j++) {
                 // When we reach the end of the childrenm break out of print loop
-                if (dirs[i].fileIndexLocations[1] == 0) {
-                    printf("None");
+                if (dirs[i].fileIndexLocations[0] == 0) {
+                    printf("* No Children Directories *");
                     break;
                 }
                 else if (dirs[i].fileIndexLocations[j] == 0) {
@@ -180,9 +191,45 @@ void listDirectories(uint16_t blockSize) {
                 }
                 printf("%llu ", dirs[i].fileIndexLocations[j]);
             }
-            printf("\n-------------------------------------------------------\n\n");
+            printf("\n\n");
         }
     }
+    printf("-------------------------------------------------------\n\n");
+}
+
+void listDirectories (uint64_t parentDirectoryBlockNumber, uint16_t blockSize) {
+    printf("-------------------------------------------------------\n");
+    printf("LISTING DIRECTORIES...\n");
+    listDirectoriesHelper(parentDirectoryBlockNumber, 0, blockSize);
+    printf("-------------------------------------------------------\n\n");
+}
+
+void listDirectoriesHelper (uint64_t parentDirectoryBlockNumber, int directoryLevel, uint16_t blockSize) {
+    // Since we know the location of the directory, we just need to read a single block
+    struct directoryEntry *dirs = malloc(blockSize);
+    LBAread(dirs, 1, parentDirectoryBlockNumber);
+    
+    // In order to make it look like a tree, we need to print spaces for deeper directories
+    // These spaces are a function of the level we start are on. For instance, the root is at level 0, so it have no spaces.
+    for (int i = 0; i < directoryLevel; i++) {
+        printf("    ");
+    }
+    
+    // Print the current directory
+    printf("-%s\n", dirs->name);
+    
+    // We have to use recursion to print out the children, which in turn will print out its children
+    // This will ensure that we keep the correct tree structure
+    // If the current directory we are printing DOES HAVE children, we print them
+    if (dirs->fileIndexLocations[0]  != 0) {
+        // Go to every child and print its children
+        for (int i = 0; dirs->fileIndexLocations[i]  != 0; i++) {
+            int childreLevel = (directoryLevel + 1);
+            listDirectoriesHelper(dirs->fileIndexLocations[i], childreLevel, blockSize);
+        }
+    }
+    
+    free(dirs);
 }
 
 void createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, uint16_t permissions, uint16_t blockSize) {
@@ -213,7 +260,7 @@ void createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, u
     printf("Directory Location: %llu\n", tempDir->blockLocation);
     printf("Directory Permissions: %hu\n", tempDir->permissions);
     printf("Directory Creation Date: %u\n", tempDir->dateCreated);
-    printf("Child Directory locations: None\n");
+    printf("Child Directory locations: * No Children Directories *\n");
     printf("-------------------------------------------------------\n\n");
     
     // Write to open block
@@ -234,7 +281,7 @@ void createRootDirectory(uint16_t permissions, uint16_t blockSize) {
     struct directoryEntry *tempRootDir = malloc(blockSize);
     
     // Set variables for the root directory
-    strcpy(tempRootDir->name, "ROOT");
+    strcpy(tempRootDir->name, "~ROOT");
     strcpy(tempRootDir->fileExtension, DIRECTORY_EXTENSION_NAME);
     tempRootDir->blockLocation = 50;
     tempRootDir->permissions = permissions;

@@ -12,7 +12,14 @@
 #define DIRECTORY_EXTENSION_NAME "DIRECTORY"
 
 // List directories
-void listDirectories(uint16_t blockSize);
+void listDirectoriesTemp(uint16_t blockSize);
+
+// * DO NOT CALL THIS *
+// This is a helper functions, and should not be called directly. Use listDirectories() to list directories!
+void listDirectoriesHelper (uint64_t parentDirectoryBlockNumber, int directoryLevel, uint16_t blockSize);
+
+// This will RECURSIVELY print directories. This ensure it will have a tree like format, which can be human readable
+void listDirectories (uint64_t parentDirectoryBlockNumber, uint16_t blockSize);
 
 // Create directory
 void createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, uint16_t permissions, uint16_t blockSize);

@@ -61,9 +61,14 @@ int main (int argc, char *argv[]) {
         initializeVolumeControlBlock(volumeSize, PARTITION_NAME, blockSize);
         createDirectory("Pictures", 50, 666, blockSize);
         createDirectory("Documents", 50, 555, blockSize);
+        createDirectory("Identifications", 52, 123, blockSize);
+        createDirectory("Legal Paperwork", 52, 777, blockSize);
+        createDirectory("Videos", 50, 456, blockSize);
+        createDirectory("Animations", 55, 123, blockSize);
+        
     }
     
-    listDirectories(blockSize);
+    listDirectories(50, blockSize);
     exit(0);
     
     // Main loop of program, where we ask for user input then carry out that functionality
@@ -76,7 +81,7 @@ int main (int argc, char *argv[]) {
         switch (userInput) {
             // List directories
             case '1':
-                listDirectories(blockSize);
+                listDirectoriesTemp(blockSize);
                 break;
                 
             case 'M':

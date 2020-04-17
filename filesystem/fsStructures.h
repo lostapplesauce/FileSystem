@@ -113,10 +113,10 @@ struct directoryEntry {
     uint64_t fileSize;
     
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-    // * An array of block numbers - 440 bytes. Maximum of 55 ELEMENTS    <---- IMPORTANT!!!!                                  *
+    // * An array of block numbers - 432 bytes. Maximum of 54 ELEMENTS    <---- IMPORTANT!!!!                                  *
     // * FOR A DIRECTORY, these blocks will point to other directories ONLY (remember: a directory can be a file OR directory) *
     // * FOR A FILE, these blocks will ONLY point to the blocks that make up the ACTUAL FILE                                   *
     // * Each element is 64 bits [0, 18,446,744,073,709,551,615]                                                               *
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-    uint64_t fileIndexLocations[55];
+    uint64_t fileIndexLocations[54];
 };
