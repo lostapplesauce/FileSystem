@@ -50,7 +50,7 @@ struct volumeControlBlock {
     
     // Total number of blocks in the partition
     // 64 bits  [0, 18,446,744,073,709,551,615] - 8 bytes
-    uint64_t numBlocks;
+    uint64_t numberOfBlocks;
 };
 
 
@@ -108,11 +108,11 @@ struct directoryEntry {
     // 64 bits [0, 18,446,744,073,709,551,615] - 8 bytes
     uint64_t fileSize;
     
-    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-    // * An array of block numbers - TOTAL SIZE MUSE BE LESS THAN 448 bytes. This means we can have a maximum of 56 ELEMENTS *  <---- IMPORTANT!!!!
-    // * FOR A DIRECTORY, these blocks will point to other directories OR files                                              *
-    // * FOR A FILE, these blocks will ONLY point to the blocks that make up the ACTUAL FILE                                 *
-    // * Each element is 64 bits [0, 18,446,744,073,709,551,615]                                                             *
-    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-    uint64_t fileIndexLocation[];
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+    // * An array of block numbers - 448 bytes. Maximum of 56 ELEMENTS    <---- IMPORTANT!!!!                                  *
+    // * FOR A DIRECTORY, these blocks will point to other directories ONLY (remember: a directory can be a file OR directory) *
+    // * FOR A FILE, these blocks will ONLY point to the blocks that make up the ACTUAL FILE                                   *
+    // * Each element is 64 bits [0, 18,446,744,073,709,551,615]                                                               *
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+    uint64_t fileIndexLocation[56];
 };

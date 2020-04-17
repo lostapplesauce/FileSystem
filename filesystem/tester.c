@@ -36,7 +36,7 @@ int main (int argc, char *argv[]) {
     }
     
     // For DEVELOPMENT. Will be removed later ~~
-    remove(argv[1]);
+    // remove(argv[1]);
     
     // Start Partition System
     printf("-------------------------------------------------------\n");
