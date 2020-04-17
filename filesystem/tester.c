@@ -60,8 +60,11 @@ int main (int argc, char *argv[]) {
         // This will create the Volume Control Block AND it will also initialize the Free Space Information blocks
         initializeVolumeControlBlock(volumeSize, PARTITION_NAME, blockSize);
         createDirectory("Pictures", 50, 666, blockSize);
+        createDirectory("Documents", 50, 555, blockSize);
     }
     
+    listDirectories(blockSize);
+    exit(0);
     
     // Main loop of program, where we ask for user input then carry out that functionality
     printMenu();

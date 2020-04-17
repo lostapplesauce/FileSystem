@@ -131,6 +131,15 @@ void intializeFreeSpaceInformation(uint64_t volumeSize, int16_t blockSize) {
         clearBit(fsi->freeBlockBitArray, i);
     }
     
+    // Print info
+    printf("-------------------------------------------------------\n");
+    printf("CREATING FREE SPACE INFORMATION...\n");
+    printf("Free Space Available: %llu\n", fsi->freeSpace);
+    printf("Lowest Block Accessible: %u\n", fsi->lowestBlockAccessible);
+    printf("Highest Block Accessible Size: %llu\n", fsi->highestBlockAccessible);
+    printf("First Free Block: 100\n");
+    printf("-------------------------------------------------------\n\n");
+    
     // Write blocks to file system
     LBAwrite(fsi, 49, 1);
     
@@ -143,11 +152,13 @@ void listDirectories(uint16_t blockSize) {
     struct directoryEntry *dirs = malloc(blockSize * 49);
     LBAread(dirs, 49, 50);
     
+    printf("-------------------------------------------------------\n");
+    printf("LISTING DIRECTORIES...\n");
     // Iterate through all the directories
     for (int i = 0; i < 50; i++) {
         // A directory has a file extension string set to the global const DIRECTORY_EXTENSION_NAME
         // If there are no more directories to be printed, break out of loop
-        if (strcmp(dirs[i].fileExtension, DIRECTORY_EXTENSION_NAME) !=0) {
+        if (strcmp(dirs[i].fileExtension, DIRECTORY_EXTENSION_NAME) != 0) {
             // Cleanup
             free(dirs);
             break;
@@ -156,22 +167,25 @@ void listDirectories(uint16_t blockSize) {
             printf("Directory Location: %llu\n", dirs[i].blockLocation);
             printf("Directory Permissions: %hu\n", dirs[i].permissions);
             printf("Directory Creation Date: %u\n", dirs[i].dateCreated);
-            printf("Sub Directory Locations: ");
+            printf("Child Directory Locations: ");
             // Print all sub directories of this directory
-            for (int i = 0; i < (sizeof(dirs[i].fileIndexLocations) / sizeof(dirs[i].fileIndexLocations[0])); i++) {
+            for (int j = 0; j < (sizeof(dirs[i].fileIndexLocations) / sizeof(dirs[i].fileIndexLocations[0])); j++) {
                 // When we reach the end of the childrenm break out of print loop
-                if (dirs[i].fileIndexLocations[i] == 0) {
+                if (dirs[i].fileIndexLocations[1] == 0) {
+                    printf("None");
                     break;
                 }
-                printf("%llu ", dirs[i].fileIndexLocations[0]);
+                else if (dirs[i].fileIndexLocations[j] == 0) {
+                    break;
+                }
+                printf("%llu ", dirs[i].fileIndexLocations[j]);
             }
-            printf("\n\n");
+            printf("\n-------------------------------------------------------\n\n");
         }
     }
 }
 
 void createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, uint16_t permissions, uint16_t blockSize) {
-    // TODO: IMPLEMENT
     // Create temp directory, which will be written to file system
     struct directoryEntry *tempDir = malloc(blockSize);
     
@@ -180,17 +194,27 @@ void createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, u
     strcpy(tempDir->fileExtension, DIRECTORY_EXTENSION_NAME);
     tempDir->permissions = permissions;
     tempDir->dateCreated = (unsigned int)time(NULL);
-    tempDir->dateCreated = (unsigned int)time(NULL);
+    tempDir->dateModified = (unsigned int)time(NULL);
     tempDir->fileSize = 0;
-    
-    // Since the root has no files/children directories when created, set these pointers to 0
-    memset(tempDir->fileIndexLocations, 0x00, (sizeof(tempDir->fileIndexLocations)/sizeof(tempDir->fileIndexLocations[0])));
     
     // Find open block to write this directory to
     uint64_t freeBlock = findSingleFreeLBABlockInRange(51, 99, blockSize);
     
     // Set this directory block location to the newly found free block
     tempDir->blockLocation = freeBlock;
+    
+    // Since the root has no files/children directories when created, set these pointers to 0
+    memset(tempDir->fileIndexLocations, 0x00, (sizeof(tempDir->fileIndexLocations)/sizeof(tempDir->fileIndexLocations[0])));
+    
+    // Print info
+    printf("-------------------------------------------------------\n");
+    printf("CREATING NEW DIRECTORY...\n");
+    printf("Directory Name: %s\n", tempDir->name);
+    printf("Directory Location: %llu\n", tempDir->blockLocation);
+    printf("Directory Permissions: %hu\n", tempDir->permissions);
+    printf("Directory Creation Date: %u\n", tempDir->dateCreated);
+    printf("Child Directory locations: None\n");
+    printf("-------------------------------------------------------\n\n");
     
     // Write to open block
     LBAwrite(tempDir, 1, freeBlock);
@@ -215,11 +239,21 @@ void createRootDirectory(uint16_t permissions, uint16_t blockSize) {
     tempRootDir->blockLocation = 50;
     tempRootDir->permissions = permissions;
     tempRootDir->dateCreated = (unsigned int)time(NULL);
-    tempRootDir->dateCreated = (unsigned int)time(NULL);
+    tempRootDir->dateModified = (unsigned int)time(NULL);
     tempRootDir->fileSize = 0;
     
     // Since the root has no files/children directories when created, set these pointers to 0
     memset(tempRootDir->fileIndexLocations, 0x00, (sizeof(tempRootDir->fileIndexLocations)/sizeof(tempRootDir->fileIndexLocations[0])));
+    
+    // Print info
+    printf("-------------------------------------------------------\n");
+    printf("CREATING *ROOT* DIRECTORY...\n");
+    printf("Directory Name: %s\n", tempRootDir->name);
+    printf("Directory Location: %llu\n", tempRootDir->blockLocation);
+    printf("Directory Permissions: %hu\n", tempRootDir->permissions);
+    printf("Directory Creation Date: %u\n", tempRootDir->dateCreated);
+    printf("Child Directory locations: None\n");
+    printf("-------------------------------------------------------\n\n");
     
     // Write back the block
     LBAwrite(tempRootDir, 1, 50);
@@ -313,6 +347,7 @@ uint64_t findSingleFreeLBABlockInRange(uint64_t startIndex, uint64_t endIndex, i
     for (uint64_t i = startIndex; i <= endIndex; i++) {
         // If the current block we are checking is free, then return its block number
         if (getBit(fsi->freeBlockBitArray, i) == 1) {
+            free(fsi);
             return i;
         }
     }
@@ -329,6 +364,9 @@ void setBlockAsUsed(uint64_t blockNumber, int16_t blockSize) {
     
     // Clear the bit to 0 (Used)
     clearBit(fsi->freeBlockBitArray, blockNumber);
+    
+    // Write back to LBA
+    LBAwrite(fsi, 49, 1);
     
     //Cleanup
     free(fsi);
