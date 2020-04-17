@@ -36,7 +36,7 @@ int main (int argc, char *argv[]) {
     }
     
     // For DEVELOPMENT. Will be removed later ~~
-    // remove(argv[1]);
+    remove(argv[1]);
     
     // Start Partition System
     printf("-------------------------------------------------------\n");
@@ -59,6 +59,7 @@ int main (int argc, char *argv[]) {
     if (!hasVolumeControlBlock(blockSize)) {
         // This will create the Volume Control Block AND it will also initialize the Free Space Information blocks
         initializeVolumeControlBlock(volumeSize, PARTITION_NAME, blockSize);
+        createDirectory("Pictures", 50, 666, blockSize);
     }
     
     

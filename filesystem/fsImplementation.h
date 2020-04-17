@@ -15,7 +15,7 @@
 void listDirectories(uint16_t blockSize);
 
 // Create directory
-void createDirectory(char* directoryName, uint16_t permissions, uint16_t blockSize);
+void createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, uint16_t permissions, uint16_t blockSize);
 
 // Create the root directory
 // Should not call this function, it is auto called when volume control block is created
@@ -52,6 +52,11 @@ void intializeFreeSpaceInformation(uint64_t volumeSize, int16_t blockSize);
 // Get free space information struct
 // Returns a pointer to the FreeSpaceInformation struct
 void* getFreeSpaceInformation(int16_t blockSize);
+
+// Takes a childDirectoryBlockNumber, and adds that block number to the indexLocation array of the parent directory, found in block parentDirectoryBlockNumber
+// Returns 1 on success
+// Returns 0 on failure (not enough room in parent)
+int addChildDirectoryIndexLocationToParent(uint64_t parentDirectoryBlockNumber, uint64_t childDirectoryBlockNumber, int16_t blockSize);
 
 // Sets the Kth bit in array A - Sets to 1 (Free)
 // Source: http://www.mathcs.emory.edu/~cheung/Courses/255/Syllabus/1-C-intro/bit-array.html

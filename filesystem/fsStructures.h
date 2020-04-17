@@ -91,6 +91,10 @@ struct directoryEntry {
     // 128 bits - 16 bytes
     char fileExtension[16];
     
+    // Location this entry sits at in the LBA
+    // 64 bits [0, 18,446,744,073,709,551,615] - 8 bytes
+    uint64_t blockLocation;
+    
     // A 16 bit bitmap representing the file permissions
     // A bit map of 111100100 is saved as a 484
     // 16 bits [0, 65,535] - 2 bytes
@@ -109,10 +113,10 @@ struct directoryEntry {
     uint64_t fileSize;
     
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-    // * An array of block numbers - 448 bytes. Maximum of 56 ELEMENTS    <---- IMPORTANT!!!!                                  *
+    // * An array of block numbers - 440 bytes. Maximum of 55 ELEMENTS    <---- IMPORTANT!!!!                                  *
     // * FOR A DIRECTORY, these blocks will point to other directories ONLY (remember: a directory can be a file OR directory) *
     // * FOR A FILE, these blocks will ONLY point to the blocks that make up the ACTUAL FILE                                   *
     // * Each element is 64 bits [0, 18,446,744,073,709,551,615]                                                               *
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-    uint64_t fileIndexLocation[56];
+    uint64_t fileIndexLocations[55];
 };

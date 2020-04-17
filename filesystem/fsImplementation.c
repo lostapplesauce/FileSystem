@@ -127,7 +127,7 @@ void intializeFreeSpaceInformation(uint64_t volumeSize, int16_t blockSize) {
     fsi->highestBlockAccessible = ((volumeSize/blockSize) - 1);
     
     // Clear bits for blocks 0-49, since they are used by VCB and FSI blocks
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i <= 50; i++) {
         clearBit(fsi->freeBlockBitArray, i);
     }
     
@@ -153,28 +153,56 @@ void listDirectories(uint16_t blockSize) {
             break;
         } else {
             printf("Directory Name: %s\n", dirs[i].name);
+            printf("Directory Location: %llu\n", dirs[i].blockLocation);
             printf("Directory Permissions: %hu\n", dirs[i].permissions);
             printf("Directory Creation Date: %u\n", dirs[i].dateCreated);
-            printf("Directory File Index Location: %llu\n", dirs[i].fileIndexLocation[4]);
+            printf("Sub Directory Locations: ");
+            // Print all sub directories of this directory
+            for (int i = 0; i < (sizeof(dirs[i].fileIndexLocations) / sizeof(dirs[i].fileIndexLocations[0])); i++) {
+                // When we reach the end of the childrenm break out of print loop
+                if (dirs[i].fileIndexLocations[i] == 0) {
+                    break;
+                }
+                printf("%llu ", dirs[i].fileIndexLocations[0]);
+            }
+            printf("\n\n");
         }
     }
 }
 
-void createDirectory(char* directoryName, uint16_t permissions, uint16_t blockSize) {
+void createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, uint16_t permissions, uint16_t blockSize) {
     // TODO: IMPLEMENT
-    // Create a temp directory, which will be written to the file sytem
+    // Create temp directory, which will be written to file system
+    struct directoryEntry *tempDir = malloc(blockSize);
     
-    // Set variables for the temp root
+    // Set variables for the root directory
+    strcpy(tempDir->name, directoryName);
+    strcpy(tempDir->fileExtension, DIRECTORY_EXTENSION_NAME);
+    tempDir->permissions = permissions;
+    tempDir->dateCreated = (unsigned int)time(NULL);
+    tempDir->dateCreated = (unsigned int)time(NULL);
+    tempDir->fileSize = 0;
     
     // Since the root has no files/children directories when created, set these pointers to 0
+    memset(tempDir->fileIndexLocations, 0x00, (sizeof(tempDir->fileIndexLocations)/sizeof(tempDir->fileIndexLocations[0])));
     
     // Find open block to write this directory to
+    uint64_t freeBlock = findSingleFreeLBABlockInRange(51, 99, blockSize);
+    
+    // Set this directory block location to the newly found free block
+    tempDir->blockLocation = freeBlock;
     
     // Write to open block
+    LBAwrite(tempDir, 1, freeBlock);
+    
+    // Update block to used
+    setBlockAsUsed(freeBlock, blockSize);
     
     // Update parent node's 'fileIndexLocation' to point to this directory
+    addChildDirectoryIndexLocationToParent(parentDirectoryBlockNumber, freeBlock, blockSize);
     
     // Cleanup
+    free(tempDir);
 }
 
 void createRootDirectory(uint16_t permissions, uint16_t blockSize) {
@@ -184,13 +212,14 @@ void createRootDirectory(uint16_t permissions, uint16_t blockSize) {
     // Set variables for the root directory
     strcpy(tempRootDir->name, "ROOT");
     strcpy(tempRootDir->fileExtension, DIRECTORY_EXTENSION_NAME);
+    tempRootDir->blockLocation = 50;
     tempRootDir->permissions = permissions;
     tempRootDir->dateCreated = (unsigned int)time(NULL);
     tempRootDir->dateCreated = (unsigned int)time(NULL);
     tempRootDir->fileSize = 0;
     
     // Since the root has no files/children directories when created, set these pointers to 0
-    memset(tempRootDir->fileIndexLocation, 0x00, (sizeof(tempRootDir->fileIndexLocation)/sizeof(tempRootDir->fileIndexLocation[0])));
+    memset(tempRootDir->fileIndexLocations, 0x00, (sizeof(tempRootDir->fileIndexLocations)/sizeof(tempRootDir->fileIndexLocations[0])));
     
     // Write back the block
     LBAwrite(tempRootDir, 1, 50);
@@ -317,4 +346,35 @@ uint64_t getHighestUseableBlock(int16_t blockSize) {
     free(fsi);
     
     return highestBlock;
+}
+
+int addChildDirectoryIndexLocationToParent(uint64_t parentDirectoryBlockNumber, uint64_t childDirectoryBlockNumber, int16_t blockSize) {
+    // Get directory from LBA block
+    struct directoryEntry *tempDir = malloc(blockSize);
+    LBAread(tempDir, 1, parentDirectoryBlockNumber);
+    
+    // Find first free IndexLocation slot
+    for(int i = 0; i < (sizeof(tempDir->fileIndexLocations) / sizeof(tempDir->fileIndexLocations[0])); i++) {
+        // If the current slot we are checking is empty, update it
+        if (tempDir->fileIndexLocations[i] == 0) {
+            // Update it
+            tempDir->fileIndexLocations[i] = childDirectoryBlockNumber;
+            
+            // Write directory back into file system
+            LBAwrite(tempDir, 1, parentDirectoryBlockNumber);
+            
+            // Cleanup
+            free (tempDir);
+            
+            // Return success
+            return 1;
+        }
+    }
+    
+    // If you go through every element, and do not find a slot, then the parent direcory cannot have any more children
+    // Cleanup
+    free(tempDir);
+    
+    // Return failure
+    return 0;
 }
