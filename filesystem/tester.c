@@ -62,24 +62,31 @@ int main (int argc, char *argv[]) {
     }
     
     
-    
     // Main loop of program, where we ask for user input then carry out that functionality
-    while (0) {
+    printMenu();
+    while (1) {
         // Prompt user for functionality choice
         char userInput;
-        printMenu();
         userInput = getchar();
         
-        // Valid that user input is a digit between 0-9 inclusive
-        if (!isdigit(userInput) || !(userInput >= '0' && userInput <='9')) {
-            printf("Invalid choice. Please enter a different option.\n");
-        }
-        
-        if (userInput == '0') {
-            // Close partition and exit the program
-            printf("Exiting File System...\n");
-            closePartitionSystem();
-            exit(0);
+        switch (userInput) {
+            // List directories
+            case '1':
+                listDirectories(blockSize);
+                break;
+                
+            case 'M':
+            case 'm':
+                printMenu();
+                break;
+                
+            // Exit program
+            case 'E':
+            case 'e':
+                printf("Exiting File System...\n");
+                closePartitionSystem();
+                exit(0);
+                break;
         }
     }
 }
