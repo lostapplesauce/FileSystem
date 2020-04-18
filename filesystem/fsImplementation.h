@@ -1,8 +1,20 @@
-/*
- File created by Pedro Souto - This file WAS NOT given to us by the professor
- This is the file where we will implement all the functionalities listed in the instructions
- From instructions: The driver should be interactive (with all built in commands) to list directories, create directories, add and remove files, copy files, move files, setting meta data, and two “special commands” one to copy from the normal filesystem to your filesystem and the other from your filesystem to the normal filesystem
- */
+/**************************************************************
+* Class: CSC-415-0# Spring 2020
+* Group Name: Last Minute
+* Name: Pedro Souto
+* Student ID: 918412864
+* Name:
+* Student ID:
+* Name:
+* Student ID:
+* Name:
+* Student ID:
+*
+* Project: Assignment 3 – File System
+* File: fsImplementation.h
+*
+* Description: Header file containing all header functions implemented in the file sytem.
+* **************************************************************/
 
 #ifndef fsImplementation_h
 #define fsImplementation_h

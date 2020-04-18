@@ -1,6 +1,20 @@
-// File created by Pedro Souto - This file WAS NOT given to us by the professor
-// This is the file where we will implement all the functionalities professor asked
-// From instructions: The driver should be interactive (with all built in commands) to list directories, create directories, add and remove files, copy files, move files, setting meta data, and two “special commands” one to copy from the normal filesystem to your filesystem and the other from your filesystem to the normal filesystem
+/**************************************************************
+* Class: CSC-415-0# Spring 2020
+* Group Name: Last Minute
+* Name: Pedro Souto
+* Student ID: 918412864
+* Name:
+* Student ID:
+* Name:
+* Student ID:
+* Name:
+* Student ID:
+*
+* Project: Assignment 3 – File System
+* File: fsImplementation.c
+*
+* Description: Implementation of all functionalities the file system uses.
+* **************************************************************/
 
 // Required C libraries
 #include <stdlib.h>
@@ -18,7 +32,7 @@ void printCommands(){
     printf("-------------------------------------------------------\n");
     printf("COMMANDS:\n");
     printf("List Directories: 'ls'\n");
-    printf("Change Directories: 'cd <directory name>'\n");
+    printf("Change Directories: 'cd <directory name>' or 'cd ..'\n");
     printf("Create Directoty: 'mkdir <directory name>'\n");
     printf("Add File: 'mkfile <file name> <file extension>'\n");
     printf("Remove File: 'rmfile <file name>\n");

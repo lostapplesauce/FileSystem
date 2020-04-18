@@ -1,7 +1,20 @@
-/*
- Team: Last Minute
- Date Created: 3/19/2020
- */
+/**************************************************************
+* Class: CSC-415-0# Spring 2020
+* Group Name: Last Minute
+* Name: Pedro Souto
+* Student ID: 918412864
+* Name:
+* Student ID:
+* Name:
+* Student ID:
+* Name:
+* Student ID:
+*
+* Project: Assignment 3 – File System
+* File: fsStructures.h
+*
+* Description: Header file containing all structures that the file system implements.
+* **************************************************************/
 
 #ifndef fsStructures_h
 #define fsStructures_h

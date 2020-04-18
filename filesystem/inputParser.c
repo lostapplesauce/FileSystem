@@ -1,3 +1,21 @@
+/**************************************************************
+* Class: CSC-415-0# Spring 2020
+* Group Name: Last Minute
+* Name: Pedro Souto
+* Student ID: 918412864
+* Name:
+* Student ID:
+* Name:
+* Student ID:
+* Name:
+* Student ID:
+*
+* Project: Assignment 3 – File System
+* File: inputParser.c
+*
+* Description: Implementation of all functionalities the user parser  uses.
+* **************************************************************/
+
 #include <string.h>
 #include <stdlib.h>
 

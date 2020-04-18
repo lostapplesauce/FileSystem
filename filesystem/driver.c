@@ -1,3 +1,21 @@
+/**************************************************************
+* Class: CSC-415-0# Spring 2020
+* Group Name: Last Minute
+* Name: Pedro Souto
+* Student ID: 918412864
+* Name:
+* Student ID:
+* Name:
+* Student ID:
+* Name:
+* Student ID:
+*
+* Project: Assignment 3 – File System
+* File: driver.c
+*
+* Description: Main driver for the file sytem.
+* **************************************************************/
+
 // Required C libraries
 #include <sys/types.h>
 #include <sys/stat.h>
