@@ -33,6 +33,10 @@ struct volumeControlBlock {
     // 64 bits [0, 18,446,744,073,709,551,615] - 8 bytes
     uint64_t rootDirectory;
     
+    // Block of the current directory we are at
+    // 64 bits [0, 18,446,744,073,709,551,615] - 8 bytes
+    uint64_t currentDirectory;
+    
     // Number of directories on the partition
     // 64 bits [0, 18,446,744,073,709,551,615] - 8 bytes
     uint64_t numberOfDirectories;
@@ -116,11 +120,15 @@ struct directoryEntry {
     // 64 bits [0, 18,446,744,073,709,551,615] - 8 bytes
     uint64_t fileSize;
     
+    // Block of the parent directory
+    // 64 bits [0, 18,446,744,073,709,551,615] - 8 bytes
+    uint64_t parentDirectory;
+    
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
     // * An array of block numbers - 432 bytes. Maximum of 54 ELEMENTS    <---- IMPORTANT!!!!                                  *
     // * FOR A DIRECTORY, these blocks will point to other directories ONLY (remember: a directory can be a file OR directory) *
     // * FOR A FILE, these blocks will ONLY point to the blocks that make up the ACTUAL FILE                                   *
     // * Each element is 64 bits [0, 18,446,744,073,709,551,615]                                                               *
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-    uint64_t fileIndexLocations[54];
+    uint64_t indexLocations[54];
 };

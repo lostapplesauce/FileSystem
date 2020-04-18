@@ -10,7 +10,7 @@
 #include <pthread.h>
 #include <errno.h>
 #include <math.h>
-#include<ctype.h>
+#include <ctype.h>
 
 // Bierman Files
 #include "fsLow.h"
@@ -18,7 +18,9 @@
 // Group Files
 #include "fsStructures.h"
 #include "fsImplementation.h"
+#include "inputParser.h"
 
+#define BUFFERSIZE 128
 #define PARTITION_NAME "Pedro's HDD"
 
 int main (int argc, char *argv[]) {
@@ -61,34 +63,72 @@ int main (int argc, char *argv[]) {
         initializeVolumeControlBlock(volumeSize, PARTITION_NAME, blockSize);
     }
     
-    // Main loop of program, where we ask for user input then carry out that functionality
+    // Create sample directories ~ Just used for testing
     sampleCreateDirectories(blockSize);
+    
+    
+    // Main loop of program, where we ask for user input then carry out that functionality
+    char userInput[BUFFERSIZE];
+    char *argList[BUFFERSIZE];
+    char *token;
     printCommands();
     while (1) {
-        // Prompt user for functionality choice
-        char input[128];
-        fgets(input, 128, stdin);
+        // Get user input
+        fgets(userInput, BUFFERSIZE, stdin);
         
-        // Remove trailing new line from input (\n)
-        // Source: https://stackoverflow.com/questions/2693776/removing-trailing-newline-character-from-fgets-input
-        input[strcspn(input, "\n")] = 0;
+        // Override the last char of input to be a null-terminator
+        userInput[strlen(userInput) - 1] = '\0';
         
-        // ls commands
-        if (strcmp(input, "ls") == 0) {
-            listDirectories(getVCBRootDirectory(blockSize), blockSize);
+        // Tokenize user input into arguments list
+        int argc = 0;
+        token = strtok(userInput, " ");
+        while (token != NULL) {
+            argList[argc] = token;
+            argc++;
+            token = strtok(NULL, " ");
         }
         
-        // menu command
-        else if ((strcmp(input, "m") == 0) || (strcmp(input, "M") == 0) || (strcmp(input, "Menu") == 0) || (strcmp(input, "menu") == 0)) {
-            printCommands();
+        // Set the element after the last element to null, so we know when to stop looking for more arguments
+        argList[argc] = NULL;
+        
+        // If the user did not enter anything or they entered too many things, consider input invalid
+        if (argc <= 0 || argc > 5) {
+            printf("Invalid Command.\n");
+            continue;
         }
         
-        // exit command
-        else if ((strcmp(input, "e") == 0) || (strcmp(input, "E") == 0) || (strcmp(input, "Exit") == 0) || (strcmp(input, "exit") == 0)) {
-            printf("Exiting File System...\n");
-            closePartitionSystem();
-            exit(0);
+        // Check if the command is valid. If it is, execute the command
+        if (userInputIsValid(argc, argList)) {
+            executeCommand(argc, argList , blockSize);
         }
+        
+        
+        
+        
+//        // Prompt user for functionality choice
+//        char input[128];
+//        fgets(input, 128, stdin);
+//
+//        // Remove trailing new line from input (\n)
+//        // Source: https://stackoverflow.com/questions/2693776/removing-trailing-newline-character-from-fgets-input
+//        input[strcspn(input, "\n")] = 0;
+//
+//        // ls commands
+//        if (strcmp(input, "ls") == 0) {
+//            listDirectories(getVCBRootDirectory(blockSize), blockSize);
+//        }
+//
+//        // menu command
+//        else if ((strcmp(input, "m") == 0) || (strcmp(input, "M") == 0) || (strcmp(input, "Menu") == 0) || (strcmp(input, "menu") == 0)) {
+//            printCommands();
+//        }
+//
+//        // exit command
+//        else if ((strcmp(input, "e") == 0) || (strcmp(input, "E") == 0) || (strcmp(input, "Exit") == 0) || (strcmp(input, "exit") == 0)) {
+//            printf("Exiting File System...\n");
+//            closePartitionSystem();
+//            exit(0);
+//        }
     }
 }
 

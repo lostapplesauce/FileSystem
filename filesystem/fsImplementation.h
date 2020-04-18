@@ -40,6 +40,11 @@ void listDirectories(uint64_t parentDirectoryBlockNumber, uint16_t blockSize);
 // Returns 0 on failure (not enough room in parent)
 int addChildDirectoryIndexLocationToParent(uint64_t parentDirectoryBlockNumber, uint64_t childDirectoryBlockNumber, int16_t blockSize);
 
+// * OLD FUNCTION. NO LONGER IN USE, I LEFT IT IN CASE WE NEED IT LATER *
+// Create directory
+// Returns the block where the directory struct was placed
+uint64_t createDirectoryOLD(uint16_t blockSize);
+
 // Create directory
 // Returns the block where the directory struct was placed
 uint64_t createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, uint16_t blockSize);
@@ -49,6 +54,9 @@ uint64_t createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumbe
 void createRootDirectory(uint16_t permissions, uint16_t blockSize);
 
 // Add file
+    // Write data to block X Y Z E G S
+    // Create directory with a parent block pointing to the current directory
+    // Add this new directory as a child of the parent
 
 // Remove file
 
@@ -67,6 +75,17 @@ void initializeVolumeControlBlock(uint64_t volumeSize, char *volumeName, uint16_
 
 // Returns the block in which the root directory structe is at
 uint64_t getVCBRootDirectory(uint16_t blockSize);
+
+// Returns the block of where our current directory is at
+uint64_t getVCBCurrentDirectory(uint16_t blockSize);
+
+// * DO NOT CALL THIS *
+// Set the current directory block to this new directory. It will be auto called in changeDirectory()
+void setVCBCurrentDirectory(uint64_t newDirectoryBlock, uint16_t blockSize);
+
+// Use this function to change the current directory
+// New directory must be a either a parent or a child of the current directory
+void changeDirectory(char* directoryName, uint16_t blockSize);
 
 // Increase the number of directoies in the VCB by 1
 void increaseVCBDirectoryCount(uint16_t blockSize);

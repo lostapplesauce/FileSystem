@@ -39,6 +39,7 @@ void initializeVolumeControlBlock(uint64_t volumeSize, char *volumeName, uint16_
     // Set correct parameters
     vcb->volumeSize = volumeSize;
     vcb->rootDirectory = 50;
+    vcb->currentDirectory = 50;
     vcb->numberOfDirectories = 0;
     strcpy(vcb->volumeName, volumeName);
     vcb->blockSize = blockSize;
@@ -293,15 +294,66 @@ void listDirectoriesRecursiveHelper (uint64_t parentDirectoryBlockNumber, int di
     // We have to use recursion to print out the children, which in turn will print out its children
     // This will ensure that we keep the correct tree structure
     // If the current directory we are printing DOES HAVE children, we print them
-    if (dirs->fileIndexLocations[0]  != 0) {
-        // Go to every child and print its children
-        for (int i = 0; dirs->fileIndexLocations[i]  != 0; i++) {
+    if (dirs->indexLocations[0]  != 0) {
+        // Go to every child and print its children. Stop this process when you come across an empty child block
+        for (int i = 0; dirs->indexLocations[i]  != 0; i++) {
             int childreLevel = (directoryLevel + 1);
-            listDirectoriesRecursiveHelper(dirs->fileIndexLocations[i], childreLevel, blockSize);
+            listDirectoriesRecursiveHelper(dirs->indexLocations[i], childreLevel, blockSize);
         }
     }
     
     free(dirs);
+}
+
+uint64_t createDirectoryOLD(uint16_t blockSize) {
+    // Print Info
+    printf("-------------------------------------------------------\n");
+    printf("Creating Directory...\n");
+    printf("Please Enter a Directory Name. No Spaces Allowed: ");
+    
+    // Get name for new directory. See directoryEntry struct for size of directory/file name (its 29...)
+    char userInput[29];
+    char *argList[29];
+    char *token;
+    fgets(userInput, 29, stdin);
+    
+    // Ensure that there was no spaces in the name
+    int numberOfWords = 0;
+    token = strtok(userInput, " ");
+    while (token != NULL) {
+        argList[numberOfWords] = token;
+        numberOfWords++;
+        token = strtok(NULL, " ");
+    }
+    
+    // If there was one word only, then the name was valid and we can procced to create a new directory
+    if (numberOfWords == 1) {
+        // Get the block of the directory we are in
+        uint64_t currentDirectoryBlock = getVCBCurrentDirectory(blockSize);
+        
+        // Get the directory struct of the directory we are in
+        struct directoryEntry *currentDir = getDirectoryEntryFromBlock(currentDirectoryBlock, blockSize);
+        
+        // Get the block of the parent directory. We need this for createDirectoryHelper()
+        uint64_t parentDirectoryBlock = currentDir->parentDirectory;
+        
+        // Create the directory
+        uint64_t locationOfNewDirectory = createDirectory(argList[0], parentDirectoryBlock, blockSize);
+        
+        //Cleanup
+        free (currentDir);
+        return locationOfNewDirectory;
+    }
+    
+    // If there was more than one word, then the name was invalid
+    else {
+        printf("Invalid Directoy Name. No Spaces Allowed!\n");
+        printf("Failed to Create New Directory.\n");
+        printf("-------------------------------------------------------\n");
+        
+        // Return block 0, since the creation was unsuccessfull
+        return 0;
+    }
 }
 
 uint64_t createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, uint16_t blockSize) {
@@ -315,6 +367,7 @@ uint64_t createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumbe
     tempDir->dateCreated = (unsigned int)time(NULL);
     tempDir->dateModified = (unsigned int)time(NULL);
     tempDir->fileSize = 0;
+    tempDir->parentDirectory = parentDirectoryBlockNumber;
     
     // Find open block to write this directory to
     uint64_t freeBlock = findSingleFreeLBABlockInRange(51, 99, blockSize);
@@ -323,7 +376,7 @@ uint64_t createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumbe
     tempDir->blockLocation = freeBlock;
     
     // Since the root has no files/children directories when created, set these pointers to 0
-    memset(tempDir->fileIndexLocations, 0x00, (sizeof(tempDir->fileIndexLocations)/sizeof(tempDir->fileIndexLocations[0])));
+    memset(tempDir->indexLocations, 0x00, (sizeof(tempDir->indexLocations)/sizeof(tempDir->indexLocations[0])));
     
     // Print info
     printf("-------------------------------------------------------\n");
@@ -332,6 +385,7 @@ uint64_t createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumbe
     printf("Directory Location: %llu\n", tempDir->blockLocation);
     printf("Directory Permissions: %hu\n", tempDir->permissions);
     printf("Directory Creation Date: %u\n", tempDir->dateCreated);
+    printf("Parent Directory location: %llu\n", tempDir->parentDirectory);
     printf("Child Directory locations: * No Children Directories *\n");
     printf("-------------------------------------------------------\n\n");
     
@@ -358,16 +412,17 @@ void createRootDirectory(uint16_t permissions, uint16_t blockSize) {
     struct directoryEntry *tempRootDir = malloc(blockSize);
     
     // Set variables for the root directory
-    strcpy(tempRootDir->name, "~ROOT");
+    strcpy(tempRootDir->name, "ROOT");
     strcpy(tempRootDir->fileExtension, DIRECTORY_EXTENSION_NAME);
     tempRootDir->blockLocation = 50;
     tempRootDir->permissions = permissions;
     tempRootDir->dateCreated = (unsigned int)time(NULL);
     tempRootDir->dateModified = (unsigned int)time(NULL);
     tempRootDir->fileSize = 0;
+    tempRootDir->parentDirectory = 50;
     
     // Since the root has no files/children directories when created, set these pointers to 0
-    memset(tempRootDir->fileIndexLocations, 0x00, (sizeof(tempRootDir->fileIndexLocations)/sizeof(tempRootDir->fileIndexLocations[0])));
+    memset(tempRootDir->indexLocations, 0x00, (sizeof(tempRootDir->indexLocations)/sizeof(tempRootDir->indexLocations[0])));
     
     // Print info
     printf("-------------------------------------------------------\n");
@@ -404,6 +459,90 @@ void increaseVCBDirectoryCount(uint16_t blockSize) {
     
     //Clean up
     free(vcb);
+}
+
+void setVCBCurrentDirectory(uint64_t newDirectoryBlock, uint16_t blockSize) {
+    // Create a temp volumeControlBlock to gather back information from block 0
+    struct volumeControlBlock *vcb = malloc(blockSize);
+
+    // Read from LBA block 0
+    LBAread(vcb, 1, 0);
+    
+    // Update the current dirctory block
+    vcb->currentDirectory = newDirectoryBlock;
+    
+    // Write VCB back to file system
+    LBAwrite(vcb, 1, 0);
+    
+    //Clean up
+    free(vcb);
+}
+
+void changeDirectory(char* directoryName, uint16_t blockSize) {
+    // Print Header
+    printf("-------------------------------------------------------\n");
+    printf("CHANGING DIRECTORIES...\n");
+    
+    
+    // Get block of the current directory
+    uint64_t currentDirectory = getVCBCurrentDirectory(blockSize);
+    
+    // Get the directory structure of the current directory
+    struct directoryEntry *dir = getDirectoryEntryFromBlock(currentDirectory, blockSize);
+    
+    // If command was 'cd ..', then we are changing directory to the parent
+    if (strcmp(directoryName, "..") == 0) {
+        // Print Info
+        printf("Attempting to change directory to: *PARENT*\n");
+        // Save parent block
+        uint64_t parentBlock = dir->parentDirectory;
+        
+        // Get directory struct of the parent
+        struct directoryEntry *parentDir = getDirectoryEntryFromBlock(parentBlock, blockSize);
+        
+        // Set current directory to parent block
+        setVCBCurrentDirectory(parentBlock, blockSize);
+        
+        // Print Info
+        printf("Changed Directory To: %s\n", parentDir->name);
+        
+        // Cleanup
+        free (parentDir);
+        free (dir);
+        printf("-------------------------------------------------------\n\n");
+    }
+    
+    // If command was 'cd NAME', then we have to ensure that NAME is a valid child before changing the directory
+    else {
+        // Print Info
+        printf("Attempting to change directory to: %s\n", directoryName);
+        
+        // Iterate through all children directories to find a name that matches
+        for (int i = 0; dir->indexLocations[i] != 0; i++) {
+            // Save block of the child we are going to look at
+            uint64_t childBlock = dir->indexLocations[i];
+            
+            // Pull the child directory
+            struct directoryEntry *childDir = getDirectoryEntryFromBlock(childBlock, blockSize);
+            
+            // If we find the name that matches, then change the current directory to that directorie's block, and break out of loop
+            if (strcmp(childDir->name, directoryName) == 0) {
+                // Set new directory to the correct child
+                setVCBCurrentDirectory(childBlock, blockSize);
+                
+                printf("Successfully Changed Directory To: %s\n", childDir->name);
+                
+                // Cleanup
+                free (childDir);
+                free (dir);
+                printf("-------------------------------------------------------\n\n");
+                return;
+            }
+        }
+        // If we iterated through all the children and did not find a match, then we cannot change directories
+        printf("Directory Not Found!\n");
+        printf("-------------------------------------------------------\n\n");
+    }
 }
 
 void decreaseVCBDirectoryCount(uint16_t blockSize) {
@@ -451,6 +590,21 @@ uint64_t getVCBRootDirectory(uint16_t blockSize) {
     LBAread(vcb, 1, 0);
     
     uint64_t rootDirectory = vcb->rootDirectory;
+    
+    //Clean up
+    free(vcb);
+    
+    return rootDirectory;
+}
+
+uint64_t getVCBCurrentDirectory(uint16_t blockSize) {
+    // Create a temp volumeControlBlock to gather back information from block 0
+    struct volumeControlBlock *vcb = malloc(blockSize);
+
+    // Read from LBA block 0
+    LBAread(vcb, 1, 0);
+    
+    uint64_t rootDirectory = vcb->currentDirectory;
     
     //Clean up
     free(vcb);
@@ -588,11 +742,11 @@ int addChildDirectoryIndexLocationToParent(uint64_t parentDirectoryBlockNumber, 
     LBAread(tempDir, 1, parentDirectoryBlockNumber);
     
     // Find first free IndexLocation slot
-    for(int i = 0; i < (sizeof(tempDir->fileIndexLocations) / sizeof(tempDir->fileIndexLocations[0])); i++) {
+    for(int i = 0; i < (sizeof(tempDir->indexLocations) / sizeof(tempDir->indexLocations[0])); i++) {
         // If the current slot we are checking is empty, update it
-        if (tempDir->fileIndexLocations[i] == 0) {
+        if (tempDir->indexLocations[i] == 0) {
             // Update it
-            tempDir->fileIndexLocations[i] = childDirectoryBlockNumber;
+            tempDir->indexLocations[i] = childDirectoryBlockNumber;
             
             // Write directory back into file system
             LBAwrite(tempDir, 1, parentDirectoryBlockNumber);
@@ -619,7 +773,7 @@ void sampleCreateDirectories(int16_t blockSize) {
     createDirectory("Pictures", rootDirectory, blockSize);
     uint64_t documentEntryLocation = createDirectory("Documents", rootDirectory, blockSize);
     createDirectory("Identifications", documentEntryLocation, blockSize);
-    createDirectory("Legal Paperwork", documentEntryLocation, blockSize);
+    createDirectory("LegalPaperwork", documentEntryLocation, blockSize);
     uint64_t videosLocation = createDirectory("Videos", rootDirectory, blockSize);
     createDirectory("Animations", videosLocation, blockSize);
 }
