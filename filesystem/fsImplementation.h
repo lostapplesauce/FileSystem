@@ -21,9 +21,10 @@
 #include <stdio.h>
 #endif /* fsImplementation_h */
 
+// Default file extension name for a directory (NOT a file)
 #define DIRECTORY_EXTENSION_NAME "DIRECTORY"
 
-// Print Menu
+// Print menu of valid commands with a proper format
 void printCommands(void);
 
 // This will get the BLOCK NUMBERS of all directories
@@ -66,9 +67,6 @@ uint64_t createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumbe
 void createRootDirectory(uint16_t permissions, uint16_t blockSize);
 
 // Add file
-    // Write data to block X Y Z E G S
-    // Create directory with a parent block pointing to the current directory
-    // Add this new directory as a child of the parent
 
 // Remove file
 
@@ -146,6 +144,8 @@ void setBlockAsUsed(uint64_t blockNumber, int16_t blockSize);
 // Returns the highest useable block in the LBA. Block may be USED or NOT USED
 uint64_t getHighestUseableBlock(int16_t blockSize);
 
-// Create DUMMY DATA for testing (adding, printing, removing, etc...)
-// THIS FUNCTION IS HARDCODED AND SHALL NOT BE A PART OF FINAL PRODUCTION
+// Create DUMMY DIRECTORIES for testing
 void sampleCreateDirectories(int16_t blockSize);
+
+// Properly closes and exits the file system
+void exitFileSystem(int16_t blockSize);

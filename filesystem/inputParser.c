@@ -16,9 +16,11 @@
 * Description: Implementation of all functionalities the user parser  uses.
 * **************************************************************/
 
+// Required C libraries
 #include <string.h>
 #include <stdlib.h>
 
+// Group Files
 #include "inputParser.h"
 #include "fsImplementation.h"
 
@@ -32,6 +34,9 @@ void executeCommand (int argc, char *argv[], uint64_t blockSize) {
     }
     else if (strcmp(argv[0],"mkdir") == 0) {
         createDirectory(argv[1], getVCBCurrentDirectory(blockSize), blockSize);
+    }
+    else if (strcmp(argv[0],"exit") == 0 || strcmp(argv[0],"e") || strcmp(argv[0],"Exit") || strcmp(argv[0],"E")) {
+        exitFileSystem(blockSize);
     }
 }
 

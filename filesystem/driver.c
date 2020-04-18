@@ -38,7 +38,10 @@
 #include "fsImplementation.h"
 #include "inputParser.h"
 
+// Maximum size of user command input
 #define BUFFERSIZE 128
+
+// Default name for the partition
 #define PARTITION_NAME "Pedro's HDD"
 
 int main (int argc, char *argv[]) {
@@ -55,7 +58,8 @@ int main (int argc, char *argv[]) {
         exit(1);
     }
     
-    // For DEVELOPMENT. Will be removed later ~~
+    // For DEVELOPMENT. Will be removed later. This deletes the text file, thus starting a fresh partition on each run
+    // TODO: Remove before turning in!
     remove(argv[1]);
     
     // Start Partition System
@@ -77,15 +81,18 @@ int main (int argc, char *argv[]) {
     
     // If a Volume Control Block has not been created before, create it now
     if (!hasVolumeControlBlock(blockSize)) {
-        // This will create the Volume Control Block AND it will also initialize the Free Space Information blocks
+        // This will create the Volume Control Block AND it will also initialize the Free Space Information blocks AND it will create the root directory
         initializeVolumeControlBlock(volumeSize, PARTITION_NAME, blockSize);
     }
     
-    // Create sample directories ~ Just used for testing
+    // Set the current directory back to the root at launch
+    setVCBCurrentDirectory(getVCBRootDirectory(blockSize), blockSize);
+    
+    // For DEVELOPMENT. Will be removed later. This creates some sample directories, thus starting the file system with some basic directories (Pictures, Videos, Documents, ...etc)
+    // TODO: Remove before turning in!
     sampleCreateDirectories(blockSize);
     
-    
-    // Main loop of program, where we ask for user input then carry out that functionality
+    // Main loop of program, where we ask for user input then execute t that functionality
     char userInput[BUFFERSIZE];
     char *argList[BUFFERSIZE];
     char *token;
@@ -119,34 +126,5 @@ int main (int argc, char *argv[]) {
         if (userInputIsValid(argc, argList)) {
             executeCommand(argc, argList , blockSize);
         }
-        
-        
-        
-        
-//        // Prompt user for functionality choice
-//        char input[128];
-//        fgets(input, 128, stdin);
-//
-//        // Remove trailing new line from input (\n)
-//        // Source: https://stackoverflow.com/questions/2693776/removing-trailing-newline-character-from-fgets-input
-//        input[strcspn(input, "\n")] = 0;
-//
-//        // ls commands
-//        if (strcmp(input, "ls") == 0) {
-//            listDirectories(getVCBRootDirectory(blockSize), blockSize);
-//        }
-//
-//        // menu command
-//        else if ((strcmp(input, "m") == 0) || (strcmp(input, "M") == 0) || (strcmp(input, "Menu") == 0) || (strcmp(input, "menu") == 0)) {
-//            printCommands();
-//        }
-//
-//        // exit command
-//        else if ((strcmp(input, "e") == 0) || (strcmp(input, "E") == 0) || (strcmp(input, "Exit") == 0) || (strcmp(input, "exit") == 0)) {
-//            printf("Exiting File System...\n");
-//            closePartitionSystem();
-//            exit(0);
-//        }
     }
 }
-

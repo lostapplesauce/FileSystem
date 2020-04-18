@@ -791,3 +791,22 @@ void sampleCreateDirectories(int16_t blockSize) {
     uint64_t videosLocation = createDirectory("Videos", rootDirectory, blockSize);
     createDirectory("Animations", videosLocation, blockSize);
 }
+
+void exitFileSystem(int16_t blockSize) {
+    // Print Info
+    printf("-------------------------------------------------------\n");
+    printf("CLOSING AND EXITING FILE SYSTEM...\n");
+    
+    // Set the current directory back to the root at close
+    setVCBCurrentDirectory(getVCBRootDirectory(blockSize), blockSize);
+    
+    // Close the partition
+    closePartitionSystem();
+
+    // Print success messages
+    printf("FILE SYSTEM CLOSED SUCCESSFULLY!\n");
+    printf("-------------------------------------------------------\n");
+    
+    // Exit
+    exit (0);
+}
