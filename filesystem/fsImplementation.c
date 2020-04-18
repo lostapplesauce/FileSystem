@@ -41,7 +41,7 @@ void printCommands(){
     printf("Set Metadata: 'setdata <file name> <file permission>'\n");
     printf("Copy from the normal filesystem to this filesystem: 'TODO!'\n");
     printf("Copy from this filesystem to the normal filesystem: 'TODO'\n");
-    printf("See Menu Again: 'menu' or 'm'\n");
+    printf("See Commands Again: 'commands' or 'c'\n");
     printf("Exit: 'exit' or 'e'\n");
     printf("-------------------------------------------------------\n\n");
 }

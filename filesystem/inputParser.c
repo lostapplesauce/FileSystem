@@ -35,8 +35,11 @@ void executeCommand (int argc, char *argv[], uint64_t blockSize) {
     else if (strcmp(argv[0],"mkdir") == 0) {
         createDirectory(argv[1], getVCBCurrentDirectory(blockSize), blockSize);
     }
-    else if (strcmp(argv[0],"exit") == 0 || strcmp(argv[0],"e") || strcmp(argv[0],"Exit") || strcmp(argv[0],"E")) {
+    else if (strcmp(argv[0],"exit") == 0 || strcmp(argv[0],"e") == 0 || strcmp(argv[0],"Exit") == 0 || strcmp(argv[0],"E") == 0) {
         exitFileSystem(blockSize);
+    }
+    else if (strcmp(argv[0],"commands") == 0 || strcmp(argv[0],"C") == 0 || strcmp(argv[0],"Commands") == 0 || strcmp(argv[0],"C") == 0) {
+        printCommands();
     }
 }
 
@@ -53,32 +56,40 @@ int userInputIsValid (int argc, char *argv[]) {
         "setdata",
         "TODO: Copy from the normal filesystem to this filesystem",
         "TODO: Copy from this filesystem to the normal filesystem",
-        "menu",
-        "m",
+        "commands",
+        "c",
+        "Commands",
+        "C",
         "exit",
         "e",
+        "Exit",
+        "E",
     };
     
     // Array listing the number of arguments each of the above commands should have. They are ordered, so think of this as a key value pair
     const int numberOfArgumentsPerCommand[] = {
-        0,
-        1,
-        1,
-        2,
-        1,
-        2,
-        2,
-        2,
-        99,
-        99,
-        0,
-        0,
-        0,
-        0,
+        0,  // ls
+        1,  // cd
+        1,  // mkdir
+        2,  // mkfile
+        1,  // rmdile
+        2,  // cpyfile
+        2,  // mvfile
+        2,  // setdata
+        99, // TODO: Copy from the normal filesystem to this filesystem
+        99, // TODO: Copy from this filesystem to the normal filesystem
+        0,  // commands
+        0,  // c
+        0,  // Commands
+        0,  // C
+        0,  // exit
+        0,  // e
+        0,  // Exit
+        0,  // E
     };
     
     // Number of possible commands. Comes from the above array
-    int numberOfCommands = 14;
+    int numberOfCommands = (sizeof(numberOfArgumentsPerCommand) / sizeof(numberOfArgumentsPerCommand[0]));
     
     // Check that the first argument is a valid command from the list
     for (int i = 0; i < numberOfCommands; i++) {
