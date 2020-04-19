@@ -287,11 +287,11 @@ void* getDirectoryEntryFromBlock(uint64_t directoryBlockNumber, uint16_t blockSi
 void listDirectories (uint64_t parentDirectoryBlockNumber, uint16_t blockSize) {
     printf("-------------------------------------------------------\n");
     printf("LISTING DIRECTORIES...\n");
-    listDirectoriesRecursiveHelper(parentDirectoryBlockNumber, 0, blockSize);
+    listDirectoriesHelper(parentDirectoryBlockNumber, 0, blockSize);
     printf("-------------------------------------------------------\n\n");
 }
 
-void listDirectoriesRecursiveHelper (uint64_t parentDirectoryBlockNumber, int directoryLevel, uint16_t blockSize) {
+void listDirectoriesHelper (uint64_t parentDirectoryBlockNumber, int directoryLevel, uint16_t blockSize) {
     // Since we know the location of the directory, we just need to read a single block
     struct directoryEntry *dirs = malloc(blockSize);
     LBAread(dirs, 1, parentDirectoryBlockNumber);
@@ -312,7 +312,7 @@ void listDirectoriesRecursiveHelper (uint64_t parentDirectoryBlockNumber, int di
         // Go to every child and print its children. Stop this process when you come across an empty child block
         for (int i = 0; dirs->indexLocations[i]  != 0; i++) {
             int childreLevel = (directoryLevel + 1);
-            listDirectoriesRecursiveHelper(dirs->indexLocations[i], childreLevel, blockSize);
+            listDirectoriesHelper(dirs->indexLocations[i], childreLevel, blockSize);
         }
     }
     

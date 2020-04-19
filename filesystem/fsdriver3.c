@@ -98,6 +98,9 @@ int main (int argc, char *argv[]) {
     char *token;
     printCommands();
     while (1) {
+        // Print prompt
+        printf("> ");
+        
         // Get user input
         fgets(userInput, BUFFERSIZE, stdin);
         

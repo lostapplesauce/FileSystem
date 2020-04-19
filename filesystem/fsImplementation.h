@@ -41,7 +41,7 @@ void* getDirectoryEntryFromBlock(uint64_t directoryBlockNumber, uint16_t blockSi
 
 // * DO NOT CALL THIS *
 // This is a helper functions, and should not be called directly. Use listDirectories() to list directories!
-void listDirectoriesRecursiveHelper(uint64_t parentDirectoryBlockNumber, int directoryLevel, uint16_t blockSize);
+void listDirectoriesHelper(uint64_t parentDirectoryBlockNumber, int directoryLevel, uint16_t blockSize);
 
 // This will RECURSIVELY print directories. This ensure it will have a tree like format, which can be human readable
 // It takes in a parentDirectoryBlockNumber, which is the block of the directory you want to list FROM.
