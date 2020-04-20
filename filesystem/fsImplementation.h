@@ -64,7 +64,7 @@ uint64_t createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumbe
 
 // * DO NOT CALL THIS *
 // Create the root directory, it is auto called when volume control block is created
-void createRootDirectory(uint16_t permissions, uint16_t blockSize);
+void createRootDirectory(uint16_t blockSize);
 
 // Add file
 

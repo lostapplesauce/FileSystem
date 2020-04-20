@@ -84,7 +84,7 @@ void initializeVolumeControlBlock(uint64_t volumeSize, char *volumeName, uint16_
     intializeFreeSpaceInformation(volumeSize, blockSize);
     
     // Since this is the first time this partition is being created, we must also intialize a root directory
-    createRootDirectory(444, blockSize);
+    createRootDirectory(blockSize);
     
     // Cleanup
     free(vcb);
@@ -421,19 +421,19 @@ uint64_t createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumbe
     return freeBlock;
 }
 
-void createRootDirectory(uint16_t permissions, uint16_t blockSize) {
+void createRootDirectory(uint16_t blockSize) {
     // Create temp directory, which will be written to file system
     struct directoryEntry *tempRootDir = malloc(blockSize);
     
     // Set variables for the root directory
     strcpy(tempRootDir->name, "ROOT");
     strcpy(tempRootDir->fileExtension, DIRECTORY_EXTENSION_NAME);
-    tempRootDir->blockLocation = 50;
-    tempRootDir->permissions = permissions;
+    tempRootDir->blockLocation = getVCBRootDirectory(blockSize);
+    tempRootDir->permissions = 755; // Permission for root directory
     tempRootDir->dateCreated = (unsigned int)time(NULL);
     tempRootDir->dateModified = (unsigned int)time(NULL);
     tempRootDir->fileSize = 0;
-    tempRootDir->parentDirectory = 50;
+    tempRootDir->parentDirectory = getVCBRootDirectory(blockSize);
     
     // Since the root has no files/children directories when created, set these pointers to 0
     memset(tempRootDir->indexLocations, 0x00, (sizeof(tempRootDir->indexLocations)/sizeof(tempRootDir->indexLocations[0])));
