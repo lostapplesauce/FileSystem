@@ -19,6 +19,9 @@ typedef u_int64_t uint64_t;
 #ifndef uint32_t
 typedef u_int32_t uint32_t;
 #endif
+#ifndef u_int16_t
+typedef u_int16_t uint16_t;
+#endif
 typedef unsigned long long ull_t;
 
 int startPartitionSystem (char * filename, uint64_t * volSize, uint64_t * blockSize);
