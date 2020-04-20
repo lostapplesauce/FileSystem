@@ -34,7 +34,7 @@
 
 /*
  Total space used by Volume Control Block: 592 bits - 74 bytes
- Volume control block should be LESS than 512 bytes, in order to fit into an LBA block
+ Volume control block should be <= 512 bytes, in order to fit into an LBA block
  STORED IN LBA BLOCK 0
 */
 struct volumeControlBlock {
@@ -78,6 +78,8 @@ struct volumeControlBlock {
 /*
  Description: Keeps track of the free blocks of the LBA
  STORED IN LBA BLOCKS 1-49
+ This is a total of 49 blocks. If you have 512 byte blocks, this can store (49 * 512) = 25,088 bytes = 200,704 bits = 200,704 POSSIBLE BLOCKS
+ If each block is 512 bytes, then 200,704 POSSIBLE BLOCKS allows you to have a partition of size 102,760,448 bytes = 102.76 mbs.
 */
 struct freeSpaceInformation {
     // Number of bytes a partition has free to be used
@@ -102,6 +104,7 @@ struct freeSpaceInformation {
  Total space used per directory entry: 4096 bits - 512 bytes
  One directory per LBA block
  STORED IN LBA BLOCKS 50 - 99
+ This is a total of 49 blocks, which means you can have a total of 49 directories/files in this file sytem. While not many, it is trivial to add more, so we simply left at this number. Adding more would be as simple as increasing the end block from 99 to X, where is X is how many directories/files you want to have.
  */
 struct directoryEntry {
     // Char array representing the name of the directory/file
