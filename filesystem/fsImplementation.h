@@ -47,6 +47,9 @@ void listDirectoriesHelper(uint64_t parentDirectoryBlockNumber, int directoryLev
 // It takes in a parentDirectoryBlockNumber, which is the block of the directory you want to list FROM.
 void listDirectories(uint64_t parentDirectoryBlockNumber, uint16_t blockSize);
 
+// Prints the name of the current directory, used for pwd command
+void displayCurrentDirectory(uint16_t blockSize);
+
 // Takes a childDirectoryBlockNumber, and adds that block number to the indexLocation array of the parent directory, found in block parentDirectoryBlockNumber
 // * Essentially, this links the parent to the child *
 // Returns 1 on success

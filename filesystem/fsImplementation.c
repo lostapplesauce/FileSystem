@@ -33,6 +33,7 @@ void printCommands(){
     printf("COMMANDS:\n");
     printf("List Directories: 'ls'\n");
     printf("Change Directories: 'cd <directory name>' or 'cd ..'\n");
+    printf("Display Working Directory: 'pwd'\n");
     printf("Create Directoty: 'mkdir <directory name>'\n");
     printf("Add File: 'mkfile <file name> <file extension>'\n");
     printf("Remove File: 'rmfile <file name>\n");
@@ -558,6 +559,19 @@ void changeDirectory(char* directoryName, uint16_t blockSize) {
         printf("-------------------------------------------------------\n\n");
     }
 }
+
+void displayCurrentDirectory(uint16_t blockSize) {
+    // Get block of the current directory
+    uint64_t currentDirectory = getVCBCurrentDirectory(blockSize);
+    
+    // Get the directory structure of the current directory
+    struct directoryEntry *dir = getDirectoryEntryFromBlock(currentDirectory, blockSize);
+    
+    printf("-------------------------------------------------------\n");
+    printf("CURRENT DIRECTORY: %s\n", dir->name);
+    printf("-------------------------------------------------------\n\n");
+}
+
 
 void decreaseVCBDirectoryCount(uint16_t blockSize) {
     // Create a temp volumeControlBlock to gather back information from block 0
