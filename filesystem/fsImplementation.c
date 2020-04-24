@@ -493,22 +493,64 @@ void setVCBCurrentDirectory(uint64_t newDirectoryBlock, uint16_t blockSize) {
     free(vcb);
 }
 
-void changeDirectory(char* directoryName, uint16_t blockSize) {
+void changeDirectory(char* directoryPath, uint16_t blockSize) {
     // Print Header
     printf("-------------------------------------------------------\n");
     printf("CHANGING DIRECTORIES...\n");
+    printf("Attempting to change directory to: %s\n", directoryPath);
     
+    // Save the current directory, in case there is an error changing directories when we call the helper
+    uint64_t originalDirectory = getVCBCurrentDirectory(blockSize);
     
+    // Keeps track of the path of directories we want to take. Can only change a maximum of 25 directories deep
+    char *directoryList[25];
+    
+    // Parse directoryPath by splitting it with the "/", which will give us the path of directories to traverse
+    char *token;
+    token = strtok(directoryPath, "/");
+    int argc = 0;
+    while (token != NULL) {
+        directoryList[argc] = token;
+        argc++;
+        token = strtok(NULL, "/");
+    }
+    
+    for (int i = 0 ; i < argc; i++) {
+        int changeStatus = changeDirectoryHelper(directoryList[i], blockSize);
+        
+        // If there was an error, this path is not valid. We want to reset back to the starting directory
+        if (changeStatus == -1) {
+            setVCBCurrentDirectory(originalDirectory, blockSize);
+            
+            // Print error, and exit the function
+            printf("Directory Not Found!\n");
+            printf("-------------------------------------------------------\n\n");
+            return;
+        }
+    }
+    
+    printf("Changed Directory Successfully.\n");
+    printf("-------------------------------------------------------\n\n");
+}
+
+int changeDirectoryHelper(char* directoryName, uint16_t blockSize) {
     // Get block of the current directory
     uint64_t currentDirectory = getVCBCurrentDirectory(blockSize);
     
     // Get the directory structure of the current directory
     struct directoryEntry *dir = getDirectoryEntryFromBlock(currentDirectory, blockSize);
     
-    // If command was 'cd ..', then we are changing directory to the parent
-    if (strcmp(directoryName, "..") == 0) {
-        // Print Info
-        printf("Attempting to change directory to: *PARENT*\n");
+    // If command was directory name was '.', then we are not changind directorie at all, so simply return a success
+    if (strcmp(directoryName, ".") == 0) {
+        // Cleanup
+        free (dir);
+        
+        // Return 1, since we technically changed successfully (we did not change, but stayed where we were at)
+        return 1;
+    }
+    
+    // If command was directory name was '..', then we are changing directory to the parent
+    else if (strcmp(directoryName, "..") == 0) {
         // Save parent block
         uint64_t parentBlock = dir->parentDirectory;
         
@@ -518,20 +560,16 @@ void changeDirectory(char* directoryName, uint16_t blockSize) {
         // Set current directory to parent block
         setVCBCurrentDirectory(parentBlock, blockSize);
         
-        // Print Info
-        printf("Changed Directory To: %s\n", parentDir->name);
-        
         // Cleanup
         free (parentDir);
         free (dir);
-        printf("-------------------------------------------------------\n\n");
+        
+        // Return 1, since we found and changed the directory successfully
+        return 1;
     }
     
     // If command was 'cd NAME', then we have to ensure that NAME is a valid child before changing the directory
     else {
-        // Print Info
-        printf("Attempting to change directory to: %s\n", directoryName);
-        
         // Iterate through all children directories to find a name that matches
         for (int i = 0; dir->indexLocations[i] != 0; i++) {
             // Save block of the child we are going to look at
@@ -545,18 +583,16 @@ void changeDirectory(char* directoryName, uint16_t blockSize) {
                 // Set new directory to the correct child
                 setVCBCurrentDirectory(childBlock, blockSize);
                 
-                printf("Successfully Changed Directory To: %s\n", childDir->name);
-                
                 // Cleanup
                 free (childDir);
                 free (dir);
-                printf("-------------------------------------------------------\n\n");
-                return;
+                
+                // Return 1, since we found and changed the directory successfully
+                return 1;
             }
         }
-        // If we iterated through all the children and did not find a match, then we cannot change directories
-        printf("Directory Not Found!\n");
-        printf("-------------------------------------------------------\n\n");
+        // If we iterated through all the children and did not find a match, then we cannot change directories since it does not exist
+        return -1;
     }
 }
 
