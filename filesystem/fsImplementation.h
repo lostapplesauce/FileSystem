@@ -75,6 +75,7 @@ void createRootDirectory(uint16_t blockSize);
 // Move file
 
 // Set metadata
+void setMetadata(char* metadata, uint64_t parentDirectoryBlockNumber, uint16_t blockSize);
 
 // Copy from the normal filesystem to your filesystem
 
