@@ -32,6 +32,9 @@ void executeCommand (int argc, char *argv[], uint64_t blockSize) {
     else if (strcmp(argv[0],"cd") == 0) {
         changeDirectory(argv[1], blockSize);
     }
+    else if (strcmp(argv[0],"pwd") == 0) {
+        displayCurrentDirectory(blockSize);
+    }
     else if (strcmp(argv[0],"mkdir") == 0) {
         createDirectory(argv[1], getVCBCurrentDirectory(blockSize), blockSize);
     }
@@ -48,6 +51,7 @@ int userInputIsValid (int argc, char *argv[]) {
     const char * validCommands[] = {
         "ls",
         "cd",
+        "pwd",
         "mkdir",
         "mkfile",
         "rmfile",
@@ -70,6 +74,7 @@ int userInputIsValid (int argc, char *argv[]) {
     const int numberOfArgumentsPerCommand[] = {
         0,  // ls
         1,  // cd
+        0,  // pwd
         1,  // mkdir
         2,  // mkfile
         1,  // rmdile

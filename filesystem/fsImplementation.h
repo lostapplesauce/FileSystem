@@ -47,6 +47,9 @@ void listDirectoriesHelper(uint64_t parentDirectoryBlockNumber, int directoryLev
 // It takes in a parentDirectoryBlockNumber, which is the block of the directory you want to list FROM.
 void listDirectories(uint64_t parentDirectoryBlockNumber, uint16_t blockSize);
 
+// Prints the name of the current directory, used for pwd command
+void displayCurrentDirectory(uint16_t blockSize);
+
 // Takes a childDirectoryBlockNumber, and adds that block number to the indexLocation array of the parent directory, found in block parentDirectoryBlockNumber
 // * Essentially, this links the parent to the child *
 // Returns 1 on success
@@ -94,8 +97,13 @@ uint64_t getVCBCurrentDirectory(uint16_t blockSize);
 void setVCBCurrentDirectory(uint64_t newDirectoryBlock, uint16_t blockSize);
 
 // Use this function to change the current directory
-// New directory must be a either a parent or a child of the current directory
-void changeDirectory(char* directoryName, uint16_t blockSize);
+// Can pass in a path followning the LINUX syntax (ex: "../Documents/Identification")
+void changeDirectory(char* directoryPath, uint16_t blockSize);
+
+// * DO NOT CALL THIS *
+// This function is called by change directory. This function expects a SINGLE child to change to. changeDirectory() is the one to call, which will parse the path and call this function as needed to change directories
+// Returns 1 if change was successfull, and -1 is there was an error
+int changeDirectoryHelper(char* directoryName, uint16_t blockSize);
 
 // Increase the number of directoies in the VCB by 1
 void increaseVCBDirectoryCount(uint16_t blockSize);
