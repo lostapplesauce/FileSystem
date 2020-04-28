@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "__locale": "c",
+        "system_error": "c",
+        "typeinfo": "c"
+    }
+}
