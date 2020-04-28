@@ -371,7 +371,6 @@ uint64_t createDirectoryOLD(uint16_t blockSize) {
     }
 }
 
-
 uint64_t createDirectory(char* directoryName, uint64_t parentDirectoryBlockNumber, uint16_t blockSize) {
     // Create temp directory, which will be written to file system
     struct directoryEntry *tempDir = malloc(blockSize);

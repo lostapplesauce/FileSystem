@@ -3,8 +3,8 @@
 * Group Name: Last Minute
 * Name: Pedro Souto
 * Student ID: 918412864
-* Name: Troy Turner   
-* Student ID: 918053544
+* Name:
+* Student ID:
 * Name:
 * Student ID:
 * Name:
